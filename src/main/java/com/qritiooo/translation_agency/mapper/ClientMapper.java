@@ -2,7 +2,9 @@ package com.qritiooo.translation_agency.mapper;
 
 import com.qritiooo.translation_agency.dto.ClientDto;
 import com.qritiooo.translation_agency.model.Client;
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
 public class ClientMapper {
 
     public static ClientDto toDto(Client c) {

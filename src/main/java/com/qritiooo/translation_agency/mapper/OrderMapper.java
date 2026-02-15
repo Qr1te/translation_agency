@@ -3,7 +3,9 @@ package com.qritiooo.translation_agency.mapper;
 import com.qritiooo.translation_agency.dto.OrderDto;
 import com.qritiooo.translation_agency.model.Document;
 import com.qritiooo.translation_agency.model.Order;
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
 public class OrderMapper {
     public static OrderDto toDto(Order o) {
         Integer clientId = o.getClient() != null ? o.getClient().getId() : null;

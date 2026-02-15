@@ -22,7 +22,6 @@ public class Client {
     @Column(unique = true)
     private String email;
 
-    // OneToMany: 1 client -> many orders
     @OneToMany(mappedBy = "client", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Order> orders = new ArrayList<>();
 }

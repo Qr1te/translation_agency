@@ -2,7 +2,9 @@ package com.qritiooo.translation_agency.mapper;
 
 import com.qritiooo.translation_agency.dto.LanguageDto;
 import com.qritiooo.translation_agency.model.Language;
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
 public class LanguageMapper {
 
     public static LanguageDto toDto(Language l) {

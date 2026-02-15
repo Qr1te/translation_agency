@@ -14,6 +14,7 @@ import java.util.List;
 public class ClientController {
 
     private final ClientService service;
+
     @PostMapping
     public ResponseEntity<ClientDto> create(@RequestBody ClientDto dto) {
         return ResponseEntity.ok(service.create(dto));

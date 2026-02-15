@@ -3,10 +3,12 @@ package com.qritiooo.translation_agency.mapper;
 import com.qritiooo.translation_agency.dto.TranslatorDto;
 import com.qritiooo.translation_agency.model.Language;
 import com.qritiooo.translation_agency.model.Translator;
+import lombok.experimental.UtilityClass;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@UtilityClass
 public class TranslatorMapper {
 
     public static TranslatorDto toDto(Translator t) {
