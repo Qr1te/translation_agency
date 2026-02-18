@@ -2,14 +2,16 @@ package com.qritiooo.translation_agency.service.impl;
 
 import com.qritiooo.translation_agency.dto.request.OrderRequest;
 import com.qritiooo.translation_agency.dto.response.OrderResponse;
-import com.qritiooo.translation_agency.model.Order;
 import com.qritiooo.translation_agency.mapper.OrderMapper;
+import com.qritiooo.translation_agency.model.Order;
 import com.qritiooo.translation_agency.repository.ClientRepository;
 import com.qritiooo.translation_agency.repository.OrderRepository;
 import com.qritiooo.translation_agency.repository.TranslatorRepository;
 import com.qritiooo.translation_agency.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -38,7 +40,6 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderResponse update(Integer id, OrderRequest request) {
         Order o = orderRepo.findById(id).orElseThrow();
-        OrderMapper.updateEntity(o, request);
 
         if (request.getClientId() != null)
             o.setClient(clientRepo.findById(request.getClientId()).orElseThrow());
@@ -58,7 +59,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse getByTitle(String title) {
         List<Order> orders = orderRepo.findByTitle(title);
         if (orders.isEmpty()) {
-            throw new RuntimeException("Order not found with title: " + title);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found with title: " + title);
         }
         return OrderMapper.toResponse(orders.getFirst());
     }
