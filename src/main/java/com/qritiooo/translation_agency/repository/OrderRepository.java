@@ -10,5 +10,6 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     List<Order> findByStatus(String status);
     List<Order> findByClient_Id(Integer clientId);
     List<Order> findByTranslator_Id(Integer translatorId);
+    List<Order> findByTitle(String title);
 }
 

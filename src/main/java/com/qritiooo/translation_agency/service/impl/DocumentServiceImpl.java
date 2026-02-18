@@ -1,6 +1,7 @@
 package com.qritiooo.translation_agency.service.impl;
 
-import com.qritiooo.translation_agency.dto.DocumentDto;
+import com.qritiooo.translation_agency.dto.request.DocumentRequest;
+import com.qritiooo.translation_agency.dto.response.DocumentResponse;
 import com.qritiooo.translation_agency.mapper.DocumentMapper;
 import com.qritiooo.translation_agency.model.Document;
 import com.qritiooo.translation_agency.model.Order;
@@ -20,40 +21,40 @@ public class DocumentServiceImpl implements DocumentService {
     private final OrderRepository orderRepo;
 
     @Override
-    public DocumentDto create(DocumentDto dto) {
+    public DocumentResponse create(DocumentRequest request) {
         Document d = new Document();
-        DocumentMapper.updateEntity(d, dto);
+        DocumentMapper.updateEntity(d, request);
 
-        if (dto.getOrderId() != null) {
-            Order o = orderRepo.findById(dto.getOrderId()).orElseThrow();
+        if (request.getOrderId() != null) {
+            Order o = orderRepo.findById(request.getOrderId()).orElseThrow();
             d.setOrder(o);
         }
 
-        return DocumentMapper.toDto(docRepo.save(d));
+        return DocumentMapper.toResponse(docRepo.save(d));
     }
 
     @Override
-    public DocumentDto update(Integer id, DocumentDto dto) {
+    public DocumentResponse update(Integer id, DocumentRequest request) {
         Document d = docRepo.findById(id).orElseThrow();
-        DocumentMapper.updateEntity(d, dto);
+        DocumentMapper.updateEntity(d, request);
 
-        if (dto.getOrderId() != null) {
-            Order o = orderRepo.findById(dto.getOrderId()).orElseThrow();
+        if (request.getOrderId() != null) {
+            Order o = orderRepo.findById(request.getOrderId()).orElseThrow();
             d.setOrder(o);
         }
 
-        return DocumentMapper.toDto(docRepo.save(d));
+        return DocumentMapper.toResponse(docRepo.save(d));
     }
 
     @Override
-    public DocumentDto getById(Integer id) {
-        return DocumentMapper.toDto(docRepo.findById(id).orElseThrow());
+    public DocumentResponse getById(Integer id) {
+        return DocumentMapper.toResponse(docRepo.findById(id).orElseThrow());
     }
 
     @Override
-    public List<DocumentDto> getAll(Integer orderId) {
+    public List<DocumentResponse> getAll(Integer orderId) {
         var list = (orderId != null) ? docRepo.findByOrder_Id(orderId) : docRepo.findAll();
-        return list.stream().map(DocumentMapper::toDto).toList();
+        return list.stream().map(DocumentMapper::toResponse).toList();
     }
 
     @Override

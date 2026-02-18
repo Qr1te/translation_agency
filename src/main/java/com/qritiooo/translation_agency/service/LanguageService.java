@@ -1,13 +1,14 @@
 package com.qritiooo.translation_agency.service;
 
-import com.qritiooo.translation_agency.dto.LanguageDto;
+import com.qritiooo.translation_agency.dto.request.LanguageRequest;
+import com.qritiooo.translation_agency.dto.response.LanguageResponse;
 
 import java.util.List;
 
 public interface LanguageService {
-    LanguageDto create(LanguageDto dto);
-    LanguageDto update(Integer id, LanguageDto dto);
-    LanguageDto getById(Integer id);
-    List<LanguageDto> getAll();
+    LanguageResponse create(LanguageRequest request);
+    LanguageResponse update(Integer id, LanguageRequest request);
+    LanguageResponse getById(Integer id);
+    List<LanguageResponse> getAll();
     void delete(Integer id);
 }

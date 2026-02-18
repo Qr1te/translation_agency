@@ -1,6 +1,7 @@
 package com.qritiooo.translation_agency.service.impl;
 
-import com.qritiooo.translation_agency.dto.ClientDto;
+import com.qritiooo.translation_agency.dto.request.ClientRequest;
+import com.qritiooo.translation_agency.dto.response.ClientResponse;
 import com.qritiooo.translation_agency.mapper.ClientMapper;
 import com.qritiooo.translation_agency.model.Client;
 import com.qritiooo.translation_agency.repository.ClientRepository;
@@ -17,27 +18,27 @@ public class ClientServiceImpl implements ClientService {
     private final ClientRepository repo;
 
     @Override
-    public ClientDto create(ClientDto dto) {
+    public ClientResponse create(ClientRequest request) {
         Client c = new Client();
-        ClientMapper.updateEntity(c, dto);
-        return ClientMapper.toDto(repo.save(c));
+        ClientMapper.updateEntity(c, request);
+        return ClientMapper.toResponse(repo.save(c));
     }
 
     @Override
-    public ClientDto update(Integer id, ClientDto dto) {
+    public ClientResponse update(Integer id, ClientRequest request) {
         Client c = repo.findById(id).orElseThrow();
-        ClientMapper.updateEntity(c, dto);
-        return ClientMapper.toDto(repo.save(c));
+        ClientMapper.updateEntity(c, request);
+        return ClientMapper.toResponse(repo.save(c));
     }
 
     @Override
-    public ClientDto getById(Integer id) {
-        return ClientMapper.toDto(repo.findById(id).orElseThrow());
+    public ClientResponse getById(Integer id) {
+        return ClientMapper.toResponse(repo.findById(id).orElseThrow());
     }
 
     @Override
-    public List<ClientDto> getAll() {
-        return repo.findAll().stream().map(ClientMapper::toDto).toList();
+    public List<ClientResponse> getAll() {
+        return repo.findAll().stream().map(ClientMapper::toResponse).toList();
     }
 
     @Override

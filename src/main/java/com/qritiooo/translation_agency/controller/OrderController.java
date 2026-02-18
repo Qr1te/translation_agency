@@ -1,7 +1,11 @@
 package com.qritiooo.translation_agency.controller;
 
-import com.qritiooo.translation_agency.dto.OrderDto;
+import com.qritiooo.translation_agency.dto.request.OrderRequest;
+import com.qritiooo.translation_agency.dto.response.OrderResponse;
 import com.qritiooo.translation_agency.service.OrderService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,19 +18,40 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    @PostMapping
-    public ResponseEntity<OrderDto> create(@RequestBody OrderDto dto) {
-        return ResponseEntity.ok(orderService.create(dto));
+    @PostMapping("/create")
+    @Operation(summary = "Create order")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Order created"),
+            @ApiResponse(responseCode = "400", description = "Invalid request")
+    })
+    public ResponseEntity<OrderResponse> create(@RequestBody OrderRequest request) {
+        return ResponseEntity.ok(orderService.create(request));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrderDto> getById(@PathVariable Integer id) {
-        try { return ResponseEntity.ok(orderService.getById(id)); }
-        catch (Exception e) { return ResponseEntity.notFound().build(); }
+    @Operation(summary = "Get order by id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Order found"),
+            @ApiResponse(responseCode = "404", description = "Order not found")
+    })
+    public ResponseEntity<OrderResponse> getById(@PathVariable Integer id) {
+        return ResponseEntity.ok(orderService.getById(id));
+    }
+
+    @GetMapping(params = "title")
+    @Operation(summary = "Get order by title")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Order found"),
+            @ApiResponse(responseCode = "404", description = "Order not found")
+    })
+    public ResponseEntity<OrderResponse> getByTitle(@RequestParam String title){
+        return ResponseEntity.ok(orderService.getByTitle(title));
     }
 
     @GetMapping
-    public ResponseEntity<List<OrderDto>> getAll(
+    @Operation(summary = "Get orders by filters")
+    @ApiResponse(responseCode = "200", description = "Orders returned")
+    public ResponseEntity<List<OrderResponse>> getAll(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Integer clientId,
             @RequestParam(required = false) Integer translatorId
@@ -34,12 +59,23 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getAll(status, clientId, translatorId));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<OrderDto> update(@PathVariable Integer id, @RequestBody OrderDto dto) {
-        return ResponseEntity.ok(orderService.update(id, dto));
+    @PutMapping("/update/{id}")
+    @Operation(summary = "Update order")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Order updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "404", description = "Order not found")
+    })
+    public ResponseEntity<OrderResponse> update(@PathVariable Integer id, @RequestBody OrderRequest request) {
+        return ResponseEntity.ok(orderService.update(id, request));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
+    @Operation(summary = "Delete order")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Order deleted"),
+            @ApiResponse(responseCode = "404", description = "Order not found")
+    })
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         orderService.delete(id);
         return ResponseEntity.noContent().build();

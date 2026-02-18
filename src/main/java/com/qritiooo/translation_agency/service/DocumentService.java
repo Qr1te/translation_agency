@@ -1,13 +1,14 @@
 package com.qritiooo.translation_agency.service;
 
-import com.qritiooo.translation_agency.dto.DocumentDto;
+import com.qritiooo.translation_agency.dto.request.DocumentRequest;
+import com.qritiooo.translation_agency.dto.response.DocumentResponse;
 
 import java.util.List;
 
 public interface DocumentService {
-    DocumentDto create(DocumentDto dto);
-    DocumentDto update(Integer id, DocumentDto dto);
-    DocumentDto getById(Integer id);
-    List<DocumentDto> getAll(Integer orderId);
+    DocumentResponse create(DocumentRequest request);
+    DocumentResponse update(Integer id, DocumentRequest request);
+    DocumentResponse getById(Integer id);
+    List<DocumentResponse> getAll(Integer orderId);
     void delete(Integer id);
 }

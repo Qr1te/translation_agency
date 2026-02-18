@@ -1,6 +1,7 @@
 package com.qritiooo.translation_agency.service.impl;
 
-import com.qritiooo.translation_agency.dto.LanguageDto;
+import com.qritiooo.translation_agency.dto.request.LanguageRequest;
+import com.qritiooo.translation_agency.dto.response.LanguageResponse;
 import com.qritiooo.translation_agency.mapper.LanguageMapper;
 import com.qritiooo.translation_agency.model.Language;
 import com.qritiooo.translation_agency.repository.LanguageRepository;
@@ -17,27 +18,27 @@ public class LanguageServiceImpl implements LanguageService {
     private final LanguageRepository repo;
 
     @Override
-    public LanguageDto create(LanguageDto dto) {
+    public LanguageResponse create(LanguageRequest request) {
         Language l = new Language();
-        LanguageMapper.updateEntity(l, dto);
-        return LanguageMapper.toDto(repo.save(l));
+        LanguageMapper.updateEntity(l, request);
+        return LanguageMapper.toResponse(repo.save(l));
     }
 
     @Override
-    public LanguageDto update(Integer id, LanguageDto dto) {
+    public LanguageResponse update(Integer id, LanguageRequest request) {
         Language l = repo.findById(id).orElseThrow();
-        LanguageMapper.updateEntity(l, dto);
-        return LanguageMapper.toDto(repo.save(l));
+        LanguageMapper.updateEntity(l, request);
+        return LanguageMapper.toResponse(repo.save(l));
     }
 
     @Override
-    public LanguageDto getById(Integer id) {
-        return LanguageMapper.toDto(repo.findById(id).orElseThrow());
+    public LanguageResponse getById(Integer id) {
+        return LanguageMapper.toResponse(repo.findById(id).orElseThrow());
     }
 
     @Override
-    public List<LanguageDto> getAll() {
-        return repo.findAll().stream().map(LanguageMapper::toDto).toList();
+    public List<LanguageResponse> getAll() {
+        return repo.findAll().stream().map(LanguageMapper::toResponse).toList();
     }
 
     @Override

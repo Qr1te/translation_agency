@@ -1,7 +1,11 @@
 package com.qritiooo.translation_agency.controller;
 
-import com.qritiooo.translation_agency.dto.ClientDto;
+import com.qritiooo.translation_agency.dto.request.ClientRequest;
+import com.qritiooo.translation_agency.dto.response.ClientResponse;
 import com.qritiooo.translation_agency.service.ClientService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,27 +20,49 @@ public class ClientController {
     private final ClientService service;
 
     @PostMapping
-    public ResponseEntity<ClientDto> create(@RequestBody ClientDto dto) {
-        return ResponseEntity.ok(service.create(dto));
+    @Operation(summary = "Create client")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Client created"),
+            @ApiResponse(responseCode = "400", description = "Invalid request")
+    })
+    public ResponseEntity<ClientResponse> create(@RequestBody ClientRequest request) {
+        return ResponseEntity.ok(service.create(request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ClientDto> update(@PathVariable Integer id, @RequestBody ClientDto dto) {
-        return ResponseEntity.ok(service.update(id, dto));
+    @Operation(summary = "Update client")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Client updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "404", description = "Client not found")
+    })
+    public ResponseEntity<ClientResponse> update(@PathVariable Integer id, @RequestBody ClientRequest request) {
+        return ResponseEntity.ok(service.update(id, request));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ClientDto> getById(@PathVariable Integer id) {
-        try { return ResponseEntity.ok(service.getById(id)); }
-        catch (Exception e) { return ResponseEntity.notFound().build(); }
+    @Operation(summary = "Get client by id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Client found"),
+            @ApiResponse(responseCode = "404", description = "Client not found")
+    })
+    public ResponseEntity<ClientResponse> getById(@PathVariable Integer id) {
+        return ResponseEntity.ok(service.getById(id));
     }
 
     @GetMapping
-    public ResponseEntity<List<ClientDto>> getAll() {
+    @Operation(summary = "Get all clients")
+    @ApiResponse(responseCode = "200", description = "Clients returned")
+    public ResponseEntity<List<ClientResponse>> getAll() {
         return ResponseEntity.ok(service.getAll());
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Delete client")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Client deleted"),
+            @ApiResponse(responseCode = "404", description = "Client not found")
+    })
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         service.delete(id);
         return ResponseEntity.noContent().build();

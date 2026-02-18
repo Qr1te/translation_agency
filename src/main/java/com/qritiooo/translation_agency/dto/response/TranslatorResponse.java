@@ -1,14 +1,18 @@
-package com.qritiooo.translation_agency.dto;
+package com.qritiooo.translation_agency.dto.response;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.Set;
 
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class TranslatorDto {
+public class TranslatorResponse {
     private Integer id;
     private String fullName;
     private BigDecimal ratePerPage;

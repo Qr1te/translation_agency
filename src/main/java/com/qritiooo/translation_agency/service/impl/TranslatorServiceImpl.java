@@ -1,6 +1,7 @@
 package com.qritiooo.translation_agency.service.impl;
 
-import com.qritiooo.translation_agency.dto.TranslatorDto;
+import com.qritiooo.translation_agency.dto.request.TranslatorRequest;
+import com.qritiooo.translation_agency.dto.response.TranslatorResponse;
 import com.qritiooo.translation_agency.mapper.TranslatorMapper;
 import com.qritiooo.translation_agency.model.Language;
 import com.qritiooo.translation_agency.model.Translator;
@@ -21,39 +22,39 @@ public class TranslatorServiceImpl implements TranslatorService {
     private final LanguageRepository languageRepo;
 
     @Override
-    public TranslatorDto create(TranslatorDto dto) {
+    public TranslatorResponse create(TranslatorRequest request) {
         Translator t = new Translator();
-        TranslatorMapper.updateEntity(t, dto);
+        TranslatorMapper.updateEntity(t, request);
 
-        if (dto.getLanguageIds() != null) {
-            List<Language> langs = languageRepo.findAllById(dto.getLanguageIds());
+        if (request.getLanguageIds() != null) {
+            List<Language> langs = languageRepo.findAllById(request.getLanguageIds());
             t.setLanguages(new HashSet<>(langs));
         }
 
-        return TranslatorMapper.toDto(translatorRepo.save(t));
+        return TranslatorMapper.toResponse(translatorRepo.save(t));
     }
 
     @Override
-    public TranslatorDto update(Integer id, TranslatorDto dto) {
+    public TranslatorResponse update(Integer id, TranslatorRequest request) {
         Translator t = translatorRepo.findById(id).orElseThrow();
-        TranslatorMapper.updateEntity(t, dto);
+        TranslatorMapper.updateEntity(t, request);
 
-        if (dto.getLanguageIds() != null) {
-            List<Language> langs = languageRepo.findAllById(dto.getLanguageIds());
+        if (request.getLanguageIds() != null) {
+            List<Language> langs = languageRepo.findAllById(request.getLanguageIds());
             t.setLanguages(new HashSet<>(langs));
         }
 
-        return TranslatorMapper.toDto(translatorRepo.save(t));
+        return TranslatorMapper.toResponse(translatorRepo.save(t));
     }
 
     @Override
-    public TranslatorDto getById(Integer id) {
-        return TranslatorMapper.toDto(translatorRepo.findById(id).orElseThrow());
+    public TranslatorResponse getById(Integer id) {
+        return TranslatorMapper.toResponse(translatorRepo.findById(id).orElseThrow());
     }
 
     @Override
-    public List<TranslatorDto> getAll() {
-        return translatorRepo.findAll().stream().map(TranslatorMapper::toDto).toList();
+    public List<TranslatorResponse> getAll() {
+        return translatorRepo.findAll().stream().map(TranslatorMapper::toResponse).toList();
     }
 
     @Override

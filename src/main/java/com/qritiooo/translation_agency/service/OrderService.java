@@ -1,14 +1,16 @@
 package com.qritiooo.translation_agency.service;
 
-import com.qritiooo.translation_agency.dto.OrderDto;
+import com.qritiooo.translation_agency.dto.request.OrderRequest;
+import com.qritiooo.translation_agency.dto.response.OrderResponse;
 
 import java.util.List;
 
 
 public interface OrderService {
-    OrderDto create(OrderDto dto);
-    OrderDto update(Integer id, OrderDto dto);
-    OrderDto getById(Integer id);
-    List<OrderDto> getAll(String status, Integer clientId, Integer translatorId);
+    OrderResponse create(OrderRequest request);
+    OrderResponse update(Integer id, OrderRequest request);
+    OrderResponse getById(Integer id);
+    OrderResponse getByTitle(String title);
+    List<OrderResponse> getAll(String status, Integer clientId, Integer translatorId);
     void delete(Integer id);
 }

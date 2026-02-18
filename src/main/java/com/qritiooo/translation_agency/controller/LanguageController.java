@@ -1,7 +1,11 @@
 package com.qritiooo.translation_agency.controller;
 
-import com.qritiooo.translation_agency.dto.LanguageDto;
+import com.qritiooo.translation_agency.dto.request.LanguageRequest;
+import com.qritiooo.translation_agency.dto.response.LanguageResponse;
 import com.qritiooo.translation_agency.service.LanguageService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,27 +20,49 @@ public class LanguageController {
     private final LanguageService service;
 
     @PostMapping
-    public ResponseEntity<LanguageDto> create(@RequestBody LanguageDto dto) {
-        return ResponseEntity.ok(service.create(dto));
+    @Operation(summary = "Create language")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Language created"),
+            @ApiResponse(responseCode = "400", description = "Invalid request")
+    })
+    public ResponseEntity<LanguageResponse> create(@RequestBody LanguageRequest request) {
+        return ResponseEntity.ok(service.create(request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<LanguageDto> update(@PathVariable Integer id, @RequestBody LanguageDto dto) {
-        return ResponseEntity.ok(service.update(id, dto));
+    @Operation(summary = "Update language")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Language updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "404", description = "Language not found")
+    })
+    public ResponseEntity<LanguageResponse> update(@PathVariable Integer id, @RequestBody LanguageRequest request) {
+        return ResponseEntity.ok(service.update(id, request));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<LanguageDto> getById(@PathVariable Integer id) {
-        try { return ResponseEntity.ok(service.getById(id)); }
-        catch (Exception e) { return ResponseEntity.notFound().build(); }
+    @Operation(summary = "Get language by id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Language found"),
+            @ApiResponse(responseCode = "404", description = "Language not found")
+    })
+    public ResponseEntity<LanguageResponse> getById(@PathVariable Integer id) {
+        return ResponseEntity.ok(service.getById(id));
     }
 
     @GetMapping
-    public ResponseEntity<List<LanguageDto>> getAll() {
+    @Operation(summary = "Get all languages")
+    @ApiResponse(responseCode = "200", description = "Languages returned")
+    public ResponseEntity<List<LanguageResponse>> getAll() {
         return ResponseEntity.ok(service.getAll());
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Delete language")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Language deleted"),
+            @ApiResponse(responseCode = "404", description = "Language not found")
+    })
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         service.delete(id);
         return ResponseEntity.noContent().build();

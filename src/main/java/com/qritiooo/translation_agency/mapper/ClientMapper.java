@@ -1,18 +1,19 @@
 package com.qritiooo.translation_agency.mapper;
 
-import com.qritiooo.translation_agency.dto.ClientDto;
+import com.qritiooo.translation_agency.dto.request.ClientRequest;
+import com.qritiooo.translation_agency.dto.response.ClientResponse;
 import com.qritiooo.translation_agency.model.Client;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ClientMapper {
 
-    public static ClientDto toDto(Client c) {
-        return new ClientDto(c.getId(), c.getFullName(), c.getEmail());
+    public static ClientResponse toResponse(Client c) {
+        return new ClientResponse(c.getId(), c.getFullName(), c.getEmail());
     }
 
-    public static void updateEntity(Client c, ClientDto dto) {
-        c.setFullName(dto.getFullName());
-        c.setEmail(dto.getEmail());
+    public static void updateEntity(Client c, ClientRequest request) {
+        c.setFullName(request.getFullName());
+        c.setEmail(request.getEmail());
     }
 }

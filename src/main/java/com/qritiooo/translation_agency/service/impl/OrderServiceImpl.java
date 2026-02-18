@@ -1,6 +1,7 @@
 package com.qritiooo.translation_agency.service.impl;
 
-import com.qritiooo.translation_agency.dto.OrderDto;
+import com.qritiooo.translation_agency.dto.request.OrderRequest;
+import com.qritiooo.translation_agency.dto.response.OrderResponse;
 import com.qritiooo.translation_agency.model.Order;
 import com.qritiooo.translation_agency.mapper.OrderMapper;
 import com.qritiooo.translation_agency.repository.ClientRepository;
@@ -21,40 +22,48 @@ public class OrderServiceImpl implements OrderService {
     private final TranslatorRepository translatorRepo;
 
     @Override
-    public OrderDto create(OrderDto dto) {
+    public OrderResponse create(OrderRequest request) {
         Order o = new Order();
-        OrderMapper.updateEntity(o, dto);
+        OrderMapper.updateEntity(o, request);
 
-        if (dto.getClientId() != null)
-            o.setClient(clientRepo.findById(dto.getClientId()).orElseThrow());
+        if (request.getClientId() != null)
+            o.setClient(clientRepo.findById(request.getClientId()).orElseThrow());
 
-        if (dto.getTranslatorId() != null)
-            o.setTranslator(translatorRepo.findById(dto.getTranslatorId()).orElseThrow());
+        if (request.getTranslatorId() != null)
+            o.setTranslator(translatorRepo.findById(request.getTranslatorId()).orElseThrow());
 
-        return OrderMapper.toDto(orderRepo.save(o));
+        return OrderMapper.toResponse(orderRepo.save(o));
     }
 
     @Override
-    public OrderDto update(Integer id, OrderDto dto) {
+    public OrderResponse update(Integer id, OrderRequest request) {
         Order o = orderRepo.findById(id).orElseThrow();
-        OrderMapper.updateEntity(o, dto);
+        OrderMapper.updateEntity(o, request);
 
-        if (dto.getClientId() != null)
-            o.setClient(clientRepo.findById(dto.getClientId()).orElseThrow());
+        if (request.getClientId() != null)
+            o.setClient(clientRepo.findById(request.getClientId()).orElseThrow());
 
-        if (dto.getTranslatorId() != null)
-            o.setTranslator(translatorRepo.findById(dto.getTranslatorId()).orElseThrow());
+        if (request.getTranslatorId() != null)
+            o.setTranslator(translatorRepo.findById(request.getTranslatorId()).orElseThrow());
 
-        return OrderMapper.toDto(orderRepo.save(o));
+        return OrderMapper.toResponse(orderRepo.save(o));
     }
 
     @Override
-    public OrderDto getById(Integer id) {
-        return OrderMapper.toDto(orderRepo.findById(id).orElseThrow());
+    public OrderResponse getById(Integer id) {
+        return OrderMapper.toResponse(orderRepo.findById(id).orElseThrow());
     }
 
     @Override
-    public List<OrderDto> getAll(String status, Integer clientId, Integer translatorId) {
+    public OrderResponse getByTitle(String title) {
+        List<Order> orders = orderRepo.findByTitle(title);
+        if (orders.isEmpty()) {
+            throw new RuntimeException("Order not found with title: " + title);
+        }
+        return OrderMapper.toResponse(orders.getFirst());
+    }
+    @Override
+    public List<OrderResponse> getAll(String status, Integer clientId, Integer translatorId) {
         List<Order> list;
 
         if (status != null) list = orderRepo.findByStatus(status);
@@ -62,7 +71,7 @@ public class OrderServiceImpl implements OrderService {
         else if (translatorId != null) list = orderRepo.findByTranslator_Id(translatorId);
         else list = orderRepo.findAll();
 
-        return list.stream().map(OrderMapper::toDto).toList();
+        return list.stream().map(OrderMapper::toResponse).toList();
     }
 
     @Override
