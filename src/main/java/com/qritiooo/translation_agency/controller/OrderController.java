@@ -7,8 +7,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -59,6 +63,28 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getAll(status, clientId, translatorId));
     }
 
+    @GetMapping("/search/jpql")
+    @Operation(summary = "Complex search with JPQL and pagination")
+    @ApiResponse(responseCode = "200", description = "Orders returned")
+    public ResponseEntity<Page<OrderResponse>> searchJpql(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String languageCode,
+            @PageableDefault(sort = "id") Pageable pageable
+    ) {
+        return ResponseEntity.ok(orderService.searchByNestedJpql(status, languageCode, pageable));
+    }
+
+    @GetMapping("/search/native")
+    @Operation(summary = "Complex search with native query and pagination")
+    @ApiResponse(responseCode = "200", description = "Orders returned")
+    public ResponseEntity<Page<OrderResponse>> searchNative(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String languageCode,
+            @PageableDefault(sort = "id") Pageable pageable
+    ) {
+        return ResponseEntity.ok(orderService.searchByNestedNative(status, languageCode, pageable));
+    }
+
     @PutMapping("/update/{id}")
     @Operation(summary = "Update order")
     @ApiResponses(value = {
@@ -81,5 +107,4 @@ public class OrderController {
         return ResponseEntity.noContent().build();
     }
 }
-
 
