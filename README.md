@@ -118,12 +118,3 @@ java -jar target/translation_agency-0.0.1-SNAPSHOT.jar
 - `GET /api/documents?orderId=...`
 - `DELETE /api/documents/{id}`
 
-## Postman
-Готовая коллекция:
-- `postman/translation_agency.postman_collection.json`
-
-Импортируй в Postman и запускай запросы по порядку (сначала create для зависимых сущностей).
-
-## Примечания
-- Если при запуске ошибка `SCRAM-based authentication, but no password was provided` — не задан `DB_PASSWORD`.
-- Для IDE/Run Config main class: `com.qritiooo.translationagency.TranslationAgencyApplication`.
