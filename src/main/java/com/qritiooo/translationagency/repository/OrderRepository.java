@@ -13,7 +13,6 @@ import org.springframework.data.repository.query.Param;
 public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     @Override
-    @EntityGraph(attributePaths = {"client", "translator", "documents"})
     List<Order> findAll();
 
     @Override
