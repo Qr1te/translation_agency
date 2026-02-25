@@ -10,6 +10,7 @@ import com.qritiooo.translationagency.repository.DocumentRepository;
 import com.qritiooo.translationagency.repository.OrderRepository;
 import com.qritiooo.translationagency.repository.TranslatorRepository;
 import com.qritiooo.translationagency.service.OrderService;
+import java.util.Comparator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -44,6 +45,7 @@ public class OrderServiceImpl implements OrderService {
 
         Order savedOrder = orderRepo.save(o);
         assignDocuments(savedOrder, request.getDocumentIds());
+        savedOrder.setDocuments(documentRepo.findByOrder_Id(savedOrder.getId()));
         return OrderMapper.toResponse(savedOrder);
     }
 
@@ -63,6 +65,7 @@ public class OrderServiceImpl implements OrderService {
 
         Order savedOrder = orderRepo.save(o);
         assignDocuments(savedOrder, request.getDocumentIds());
+        savedOrder.setDocuments(documentRepo.findByOrder_Id(savedOrder.getId()));
         return OrderMapper.toResponse(savedOrder);
     }
 
@@ -97,7 +100,10 @@ public class OrderServiceImpl implements OrderService {
             list = orderRepo.findAll();
         }
 
-        return list.stream().map(OrderMapper::toResponse).toList();
+        return list.stream()
+                .sorted(Comparator.comparing(Order::getId))
+                .map(OrderMapper::toResponse)
+                .toList();
     }
 
     @Override
