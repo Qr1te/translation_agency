@@ -34,19 +34,8 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse create(OrderRequest request) {
         Order o = new Order();
         OrderMapper.updateEntity(o, request);
-
-        if (request.getClientId() != null) {
-            o.setClient(clientRepo.findById(request.getClientId()).orElseThrow());
-        }
-
-        if (request.getTranslatorId() != null) {
-            o.setTranslator(translatorRepo.findById(request.getTranslatorId()).orElseThrow());
-        }
-
-        Order savedOrder = orderRepo.save(o);
-        assignDocuments(savedOrder, request.getDocumentIds());
-        savedOrder.setDocuments(documentRepo.findByOrder_Id(savedOrder.getId()));
-        return OrderMapper.toResponse(savedOrder);
+        applyRelations(o, request);
+        return saveWithDocumentsAndMap(o, request.getDocumentIds());
     }
 
     @Override
@@ -54,19 +43,8 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse update(Integer id, OrderRequest request) {
         Order o = orderRepo.findById(id).orElseThrow();
         OrderMapper.updateEntity(o, request);
-
-        if (request.getClientId() != null) {
-            o.setClient(clientRepo.findById(request.getClientId()).orElseThrow());
-        }
-
-        if (request.getTranslatorId() != null) {
-            o.setTranslator(translatorRepo.findById(request.getTranslatorId()).orElseThrow());
-        }
-
-        Order savedOrder = orderRepo.save(o);
-        assignDocuments(savedOrder, request.getDocumentIds());
-        savedOrder.setDocuments(documentRepo.findByOrder_Id(savedOrder.getId()));
-        return OrderMapper.toResponse(savedOrder);
+        applyRelations(o, request);
+        return saveWithDocumentsAndMap(o, request.getDocumentIds());
     }
 
     @Override
@@ -88,19 +66,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<OrderResponse> getAll(String status, Integer clientId, Integer translatorId) {
-        List<Order> list;
-
-        if (status != null) {
-            list = orderRepo.findByStatus(status);
-        } else if (clientId != null) {
-            list = orderRepo.findByClient_Id(clientId);
-        } else if (translatorId != null) {
-            list = orderRepo.findByTranslator_Id(translatorId);
-        } else {
-            list = orderRepo.findAll();
-        }
-
-        return list.stream()
+        return findByFilters(status, clientId, translatorId).stream()
                 .sorted(Comparator.comparing(Order::getId))
                 .map(OrderMapper::toResponse)
                 .toList();
@@ -142,6 +108,35 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void delete(Integer id) {
         orderRepo.deleteById(id);
+    }
+
+    private void applyRelations(Order order, OrderRequest request) {
+        if (request.getClientId() != null) {
+            order.setClient(clientRepo.findById(request.getClientId()).orElseThrow());
+        }
+        if (request.getTranslatorId() != null) {
+            order.setTranslator(translatorRepo.findById(request.getTranslatorId()).orElseThrow());
+        }
+    }
+
+    private OrderResponse saveWithDocumentsAndMap(Order order, List<Integer> documentIds) {
+        Order savedOrder = orderRepo.save(order);
+        assignDocuments(savedOrder, documentIds);
+        savedOrder.setDocuments(documentRepo.findByOrder_Id(savedOrder.getId()));
+        return OrderMapper.toResponse(savedOrder);
+    }
+
+    private List<Order> findByFilters(String status, Integer clientId, Integer translatorId) {
+        if (status != null) {
+            return orderRepo.findByStatus(status);
+        }
+        if (clientId != null) {
+            return orderRepo.findByClient_Id(clientId);
+        }
+        if (translatorId != null) {
+            return orderRepo.findByTranslator_Id(translatorId);
+        }
+        return orderRepo.findAll();
     }
 }
 
