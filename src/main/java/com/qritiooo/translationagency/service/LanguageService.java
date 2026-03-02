@@ -9,6 +9,8 @@ public interface LanguageService {
 
     LanguageResponse update(Integer id, LanguageRequest request);
 
+    LanguageResponse patch(Integer id, LanguageRequest request);
+
     LanguageResponse getById(Integer id);
 
     List<LanguageResponse> getAll();

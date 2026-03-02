@@ -9,6 +9,8 @@ public interface ClientService {
 
     ClientResponse update(Integer id, ClientRequest request);
 
+    ClientResponse patch(Integer id, ClientRequest request);
+
     ClientResponse getById(Integer id);
 
     List<ClientResponse> getAll();

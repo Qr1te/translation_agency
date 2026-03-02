@@ -11,6 +11,8 @@ public interface OrderService {
 
     OrderResponse update(Integer id, OrderRequest request);
 
+    OrderResponse patch(Integer id, OrderRequest request);
+
     OrderResponse getById(Integer id);
 
     OrderResponse getByTitle(String title);

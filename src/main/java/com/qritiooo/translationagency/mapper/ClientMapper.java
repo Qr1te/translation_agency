@@ -16,5 +16,14 @@ public class ClientMapper {
         c.setFullName(request.getFullName());
         c.setEmail(request.getEmail());
     }
+
+    public static void patchEntity(Client c, ClientRequest request) {
+        if (request.getFullName() != null) {
+            c.setFullName(request.getFullName());
+        }
+        if (request.getEmail() != null) {
+            c.setEmail(request.getEmail());
+        }
+    }
 }
 

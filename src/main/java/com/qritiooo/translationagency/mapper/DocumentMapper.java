@@ -17,5 +17,14 @@ public class DocumentMapper {
         d.setType(request.getType());
         d.setPages(request.getPages());
     }
+
+    public static void patchEntity(Document d, DocumentRequest request) {
+        if (request.getType() != null) {
+            d.setType(request.getType());
+        }
+        if (request.getPages() != null) {
+            d.setPages(request.getPages());
+        }
+    }
 }
 

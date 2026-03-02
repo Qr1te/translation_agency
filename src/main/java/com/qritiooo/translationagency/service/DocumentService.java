@@ -9,6 +9,8 @@ public interface DocumentService {
 
     DocumentResponse update(Integer id, DocumentRequest request);
 
+    DocumentResponse patch(Integer id, DocumentRequest request);
+
     DocumentResponse getById(Integer id);
 
     List<DocumentResponse> getAll(Integer orderId);

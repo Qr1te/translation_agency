@@ -1,5 +1,8 @@
 package com.qritiooo.translationagency.service.impl;
 
+import com.qritiooo.translationagency.cache.CacheStore;
+import com.qritiooo.translationagency.cache.CacheableService;
+import com.qritiooo.translationagency.cache.HashMapCacheStore;
 import com.qritiooo.translationagency.dto.request.OrderRequest;
 import com.qritiooo.translationagency.dto.response.OrderResponse;
 import com.qritiooo.translationagency.mapper.OrderMapper;
@@ -22,12 +25,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
-public class OrderServiceImpl implements OrderService {
+public class OrderServiceImpl implements OrderService, CacheableService {
 
     private final OrderRepository orderRepo;
     private final ClientRepository clientRepo;
     private final TranslatorRepository translatorRepo;
     private final DocumentRepository documentRepo;
+    private final CacheStore cacheStore = new HashMapCacheStore();
 
     @Override
     @Transactional
@@ -35,7 +39,9 @@ public class OrderServiceImpl implements OrderService {
         Order o = new Order();
         OrderMapper.updateEntity(o, request);
         applyRelations(o, request);
-        return saveWithDocumentsAndMap(o, request.getDocumentIds());
+        OrderResponse response = saveWithDocumentsAndMap(o, request.getDocumentIds());
+        invalidateCache();
+        return response;
     }
 
     @Override
@@ -44,7 +50,20 @@ public class OrderServiceImpl implements OrderService {
         Order o = orderRepo.findById(id).orElseThrow();
         OrderMapper.updateEntity(o, request);
         applyRelations(o, request);
-        return saveWithDocumentsAndMap(o, request.getDocumentIds());
+        OrderResponse response = saveWithDocumentsAndMap(o, request.getDocumentIds());
+        invalidateCache();
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse patch(Integer id, OrderRequest request) {
+        Order o = orderRepo.findById(id).orElseThrow();
+        OrderMapper.patchEntity(o, request);
+        applyRelations(o, request);
+        OrderResponse response = saveWithDocumentsAndMap(o, request.getDocumentIds());
+        invalidateCache();
+        return response;
     }
 
     @Override
@@ -54,7 +73,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderResponse getByTitle(String title) {
-        List<Order> orders = orderRepo.findByTitle(title);
+        List<Order> orders = getOrLoad("getByTitle", () -> orderRepo.findByTitle(title), title);
         if (orders.isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
@@ -66,10 +85,26 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<OrderResponse> getAll(String status, Integer clientId, Integer translatorId) {
-        return findByFilters(status, clientId, translatorId).stream()
-                .sorted(Comparator.comparing(Order::getId))
-                .map(OrderMapper::toResponse)
-                .toList();
+        return getOrLoad(
+                "getAll",
+                () -> findByFilters(status, clientId, translatorId).stream()
+                        .sorted(Comparator.comparing(Order::getId))
+                        .map(OrderMapper::toResponse)
+                        .toList(),
+                status,
+                clientId,
+                translatorId
+        );
+    }
+
+    @Override
+    public String getCacheNamespace() {
+        return "order";
+    }
+
+    @Override
+    public CacheStore getCacheStore() {
+        return cacheStore;
     }
 
     @Override
@@ -79,8 +114,16 @@ public class OrderServiceImpl implements OrderService {
             String languageCode,
             Pageable pageable
     ) {
-        return orderRepo.searchByNestedJpql(status, languageCode, pageable)
-                .map(OrderMapper::toResponse);
+        return getOrLoad(
+                "searchByNestedJpql",
+                () -> orderRepo.searchByNestedJpql(status, languageCode, pageable)
+                        .map(OrderMapper::toResponse),
+                status,
+                languageCode,
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                pageable.getSort().toString()
+        );
     }
 
     @Override
@@ -90,8 +133,16 @@ public class OrderServiceImpl implements OrderService {
             String languageCode,
             Pageable pageable
     ) {
-        return orderRepo.searchByNestedNative(status, languageCode, pageable)
-                .map(OrderMapper::toResponse);
+        return getOrLoad(
+                "searchByNestedNative",
+                () -> orderRepo.searchByNestedNative(status, languageCode, pageable)
+                        .map(OrderMapper::toResponse),
+                status,
+                languageCode,
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                pageable.getSort().toString()
+        );
     }
 
     private void assignDocuments(Order order, List<Integer> documentIds) {
@@ -108,6 +159,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void delete(Integer id) {
         orderRepo.deleteById(id);
+        invalidateCache();
     }
 
     private void applyRelations(Order order, OrderRequest request) {

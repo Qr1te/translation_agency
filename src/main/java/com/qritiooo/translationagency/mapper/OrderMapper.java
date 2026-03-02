@@ -27,6 +27,15 @@ public class OrderMapper {
         o.setTitle(request.getTitle());
         o.setStatus(request.getStatus());
     }
+
+    public static void patchEntity(Order o, OrderRequest request) {
+        if (request.getTitle() != null) {
+            o.setTitle(request.getTitle());
+        }
+        if (request.getStatus() != null) {
+            o.setStatus(request.getStatus());
+        }
+    }
 }
 
 

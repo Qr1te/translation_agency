@@ -9,6 +9,8 @@ public interface TranslatorService {
 
     TranslatorResponse update(Integer id, TranslatorRequest request);
 
+    TranslatorResponse patch(Integer id, TranslatorRequest request);
+
     TranslatorResponse getById(Integer id);
 
     List<TranslatorResponse> getAll();

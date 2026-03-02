@@ -16,5 +16,14 @@ public class LanguageMapper {
         l.setCode(request.getCode());
         l.setName(request.getName());
     }
+
+    public static void patchEntity(Language l, LanguageRequest request) {
+        if (request.getCode() != null) {
+            l.setCode(request.getCode());
+        }
+        if (request.getName() != null) {
+            l.setName(request.getName());
+        }
+    }
 }
 

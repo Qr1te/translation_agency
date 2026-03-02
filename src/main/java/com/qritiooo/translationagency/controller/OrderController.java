@@ -14,6 +14,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -106,6 +107,20 @@ public class OrderController {
             @RequestBody OrderRequest request
     ) {
         return ResponseEntity.ok(orderService.update(id, request));
+    }
+
+    @PatchMapping("/patch/{id}")
+    @Operation(summary = "Patch order")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Order patched"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "404", description = "Order not found")
+    })
+    public ResponseEntity<OrderResponse> patch(
+            @PathVariable Integer id,
+            @RequestBody OrderRequest request
+    ) {
+        return ResponseEntity.ok(orderService.patch(id, request));
     }
 
     @DeleteMapping("/delete/{id}")

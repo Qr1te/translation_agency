@@ -23,5 +23,14 @@ public class TranslatorMapper {
         t.setFullName(request.getFullName());
         t.setRatePerPage(request.getRatePerPage());
     }
+
+    public static void patchEntity(Translator t, TranslatorRequest request) {
+        if (request.getFullName() != null) {
+            t.setFullName(request.getFullName());
+        }
+        if (request.getRatePerPage() != null) {
+            t.setRatePerPage(request.getRatePerPage());
+        }
+    }
 }
 

@@ -1,5 +1,8 @@
 package com.qritiooo.translationagency.service.impl;
 
+import com.qritiooo.translationagency.cache.CacheStore;
+import com.qritiooo.translationagency.cache.CacheableService;
+import com.qritiooo.translationagency.cache.HashMapCacheStore;
 import com.qritiooo.translationagency.dto.request.DocumentRequest;
 import com.qritiooo.translationagency.dto.response.DocumentResponse;
 import com.qritiooo.translationagency.mapper.DocumentMapper;
@@ -14,10 +17,11 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class DocumentServiceImpl implements DocumentService {
+public class DocumentServiceImpl implements DocumentService, CacheableService {
 
     private final DocumentRepository docRepo;
     private final OrderRepository orderRepo;
+    private final CacheStore cacheStore = new HashMapCacheStore();
 
     @Override
     public DocumentResponse create(DocumentRequest request) {
@@ -29,7 +33,9 @@ public class DocumentServiceImpl implements DocumentService {
             d.setOrder(o);
         }
 
-        return DocumentMapper.toResponse(docRepo.save(d));
+        DocumentResponse response = DocumentMapper.toResponse(docRepo.save(d));
+        invalidateCache();
+        return response;
     }
 
     @Override
@@ -42,7 +48,24 @@ public class DocumentServiceImpl implements DocumentService {
             d.setOrder(o);
         }
 
-        return DocumentMapper.toResponse(docRepo.save(d));
+        DocumentResponse response = DocumentMapper.toResponse(docRepo.save(d));
+        invalidateCache();
+        return response;
+    }
+
+    @Override
+    public DocumentResponse patch(Integer id, DocumentRequest request) {
+        Document d = docRepo.findById(id).orElseThrow();
+        DocumentMapper.patchEntity(d, request);
+
+        if (request.getOrderId() != null) {
+            Order o = orderRepo.findById(request.getOrderId()).orElseThrow();
+            d.setOrder(o);
+        }
+
+        DocumentResponse response = DocumentMapper.toResponse(docRepo.save(d));
+        invalidateCache();
+        return response;
     }
 
     @Override
@@ -52,13 +75,32 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public List<DocumentResponse> getAll(Integer orderId) {
-        var list = (orderId != null) ? docRepo.findByOrder_Id(orderId) : docRepo.findAll();
-        return list.stream().map(DocumentMapper::toResponse).toList();
+        return getOrLoad(
+                "getAll",
+                () -> {
+                    var list = (orderId != null)
+                            ? docRepo.findByOrder_Id(orderId)
+                            : docRepo.findAll();
+                    return list.stream().map(DocumentMapper::toResponse).toList();
+                },
+                orderId
+        );
     }
 
     @Override
     public void delete(Integer id) {
         docRepo.deleteById(id);
+        invalidateCache();
+    }
+
+    @Override
+    public String getCacheNamespace() {
+        return "document";
+    }
+
+    @Override
+    public CacheStore getCacheStore() {
+        return cacheStore;
     }
 }
 
