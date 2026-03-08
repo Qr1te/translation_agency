@@ -8,6 +8,7 @@ import com.qritiooo.translationagency.model.CatTool;
 import com.qritiooo.translationagency.repository.CatToolRepository;
 import com.qritiooo.translationagency.service.CatToolService;
 import java.util.List;
+import java.util.function.BiConsumer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,23 +20,17 @@ public class CatToolServiceImpl extends BaseCacheableService implements CatToolS
 
     @Override
     public CatToolResponse create(CatToolRequest request) {
-        CatTool tool = new CatTool();
-        CatToolMapper.updateEntity(tool, request);
-        return saveAndMap(tool);
+        return saveNew(request);
     }
 
     @Override
     public CatToolResponse update(Integer id, CatToolRequest request) {
-        CatTool tool = getCatToolOrThrow(id);
-        CatToolMapper.updateEntity(tool, request);
-        return saveAndMap(tool);
+        return mutateExisting(id, request, CatToolMapper::updateEntity);
     }
 
     @Override
     public CatToolResponse patch(Integer id, CatToolRequest request) {
-        CatTool tool = getCatToolOrThrow(id);
-        CatToolMapper.patchEntity(tool, request);
-        return saveAndMap(tool);
+        return mutateExisting(id, request, CatToolMapper::patchEntity);
     }
 
     @Override
@@ -65,6 +60,22 @@ public class CatToolServiceImpl extends BaseCacheableService implements CatToolS
         return repo.findById(id).orElseThrow(
                 () -> new NotFoundException("CAT tool not found with id: " + id)
         );
+    }
+
+    private CatToolResponse saveNew(CatToolRequest request) {
+        CatTool created = new CatTool();
+        CatToolMapper.updateEntity(created, request);
+        return saveAndMap(created);
+    }
+
+    private CatToolResponse mutateExisting(
+            Integer id,
+            CatToolRequest request,
+            BiConsumer<CatTool, CatToolRequest> mutator
+    ) {
+        CatTool existing = getCatToolOrThrow(id);
+        mutator.accept(existing, request);
+        return saveAndMap(existing);
     }
 
     private CatToolResponse saveAndMap(CatTool tool) {
