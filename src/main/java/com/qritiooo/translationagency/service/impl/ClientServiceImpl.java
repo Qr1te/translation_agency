@@ -5,6 +5,7 @@ import com.qritiooo.translationagency.cache.CacheableService;
 import com.qritiooo.translationagency.cache.HashMapCacheStore;
 import com.qritiooo.translationagency.dto.request.ClientRequest;
 import com.qritiooo.translationagency.dto.response.ClientResponse;
+import com.qritiooo.translationagency.exception.NotFoundException;
 import com.qritiooo.translationagency.mapper.ClientMapper;
 import com.qritiooo.translationagency.model.Client;
 import com.qritiooo.translationagency.repository.ClientRepository;
@@ -24,32 +25,26 @@ public class ClientServiceImpl implements ClientService, CacheableService {
     public ClientResponse create(ClientRequest request) {
         Client c = new Client();
         ClientMapper.updateEntity(c, request);
-        ClientResponse response = ClientMapper.toResponse(repo.save(c));
-        invalidateCache();
-        return response;
+        return saveAndMap(c);
     }
 
     @Override
     public ClientResponse update(Integer id, ClientRequest request) {
-        Client c = repo.findById(id).orElseThrow();
+        Client c = getClientOrThrow(id);
         ClientMapper.updateEntity(c, request);
-        ClientResponse response = ClientMapper.toResponse(repo.save(c));
-        invalidateCache();
-        return response;
+        return saveAndMap(c);
     }
 
     @Override
     public ClientResponse patch(Integer id, ClientRequest request) {
-        Client c = repo.findById(id).orElseThrow();
+        Client c = getClientOrThrow(id);
         ClientMapper.patchEntity(c, request);
-        ClientResponse response = ClientMapper.toResponse(repo.save(c));
-        invalidateCache();
-        return response;
+        return saveAndMap(c);
     }
 
     @Override
     public ClientResponse getById(Integer id) {
-        return ClientMapper.toResponse(repo.findById(id).orElseThrow());
+        return ClientMapper.toResponse(getClientOrThrow(id));
     }
 
     @Override
@@ -74,6 +69,18 @@ public class ClientServiceImpl implements ClientService, CacheableService {
     @Override
     public CacheStore getCacheStore() {
         return cacheStore;
+    }
+
+    private Client getClientOrThrow(Integer id) {
+        return repo.findById(id).orElseThrow(
+                () -> new NotFoundException("Client not found with id: " + id)
+        );
+    }
+
+    private ClientResponse saveAndMap(Client client) {
+        ClientResponse response = ClientMapper.toResponse(repo.save(client));
+        invalidateCache();
+        return response;
     }
 }
 

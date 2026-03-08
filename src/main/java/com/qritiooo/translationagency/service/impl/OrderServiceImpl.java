@@ -5,6 +5,8 @@ import com.qritiooo.translationagency.cache.CacheableService;
 import com.qritiooo.translationagency.cache.HashMapCacheStore;
 import com.qritiooo.translationagency.dto.request.OrderRequest;
 import com.qritiooo.translationagency.dto.response.OrderResponse;
+import com.qritiooo.translationagency.exception.BadRequestException;
+import com.qritiooo.translationagency.exception.NotFoundException;
 import com.qritiooo.translationagency.mapper.OrderMapper;
 import com.qritiooo.translationagency.model.Document;
 import com.qritiooo.translationagency.model.Language;
@@ -19,10 +21,8 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -76,10 +76,7 @@ public class OrderServiceImpl implements OrderService, CacheableService {
     public OrderResponse getByTitle(String title) {
         List<Order> orders = getOrLoad("getByTitle", () -> orderRepo.findByTitle(title), title);
         if (orders.isEmpty()) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "Order not found with title: " + title
-            );
+            throw new NotFoundException("Order not found with title: " + title);
         }
         return OrderMapper.toResponse(orders.getFirst());
     }
@@ -207,7 +204,7 @@ public class OrderServiceImpl implements OrderService, CacheableService {
         try {
             return Language.fromCode(languageCode);
         } catch (IllegalArgumentException ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage());
+            throw new BadRequestException(ex.getMessage());
         }
     }
 }

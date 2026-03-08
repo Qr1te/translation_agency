@@ -1,4 +1,4 @@
-package com.qritiooo.translationagency.controller;
+package com.qritiooo.translationagency.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
@@ -9,23 +9,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<ApiError> handleResponseStatusException(
-            ResponseStatusException ex,
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ApiError> handleNotFound(
+            NotFoundException ex,
             HttpServletRequest request
     ) {
-        HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
-        return ResponseEntity.status(status).body(
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                 new ApiError(
                         Instant.now(),
-                        status.value(),
-                        status.getReasonPhrase(),
-                        ex.getReason(),
+                        HttpStatus.NOT_FOUND.value(),
+                        HttpStatus.NOT_FOUND.getReasonPhrase(),
+                        ex.getMessage(),
                         request.getRequestURI()
                 )
         );
@@ -66,9 +64,9 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiError> handleIllegalArgumentException(
-            IllegalArgumentException ex,
+    @ExceptionHandler({BadRequestException.class, IllegalArgumentException.class})
+    public ResponseEntity<ApiError> handleBadRequest(
+            RuntimeException ex,
             HttpServletRequest request
     ) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
