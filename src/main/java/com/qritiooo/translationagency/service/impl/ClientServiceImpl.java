@@ -1,5 +1,6 @@
 package com.qritiooo.translationagency.service.impl;
 
+import com.qritiooo.translationagency.cache.BaseCacheableService;
 import com.qritiooo.translationagency.dto.request.ClientRequest;
 import com.qritiooo.translationagency.dto.response.ClientResponse;
 import com.qritiooo.translationagency.exception.NotFoundException;
