@@ -7,6 +7,7 @@ import com.qritiooo.translationagency.dto.request.OrderRequest;
 import com.qritiooo.translationagency.dto.response.OrderResponse;
 import com.qritiooo.translationagency.mapper.OrderMapper;
 import com.qritiooo.translationagency.model.Document;
+import com.qritiooo.translationagency.model.Language;
 import com.qritiooo.translationagency.model.Order;
 import com.qritiooo.translationagency.repository.ClientRepository;
 import com.qritiooo.translationagency.repository.DocumentRepository;
@@ -114,12 +115,13 @@ public class OrderServiceImpl implements OrderService, CacheableService {
             String languageCode,
             Pageable pageable
     ) {
+        Language language = parseLanguage(languageCode);
         return getOrLoad(
                 "searchByNestedJpql",
-                () -> orderRepo.searchByNestedJpql(status, languageCode, pageable)
+                () -> orderRepo.searchByNestedJpql(status, language, pageable)
                         .map(OrderMapper::toResponse),
                 status,
-                languageCode,
+                language != null ? language.name() : null,
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
                 pageable.getSort().toString()
@@ -133,12 +135,17 @@ public class OrderServiceImpl implements OrderService, CacheableService {
             String languageCode,
             Pageable pageable
     ) {
+        Language language = parseLanguage(languageCode);
         return getOrLoad(
                 "searchByNestedNative",
-                () -> orderRepo.searchByNestedNative(status, languageCode, pageable)
+                () -> orderRepo.searchByNestedNative(
+                        status,
+                        language != null ? language.name() : null,
+                        pageable
+                )
                         .map(OrderMapper::toResponse),
                 status,
-                languageCode,
+                language != null ? language.name() : null,
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
                 pageable.getSort().toString()
@@ -174,7 +181,9 @@ public class OrderServiceImpl implements OrderService, CacheableService {
     private OrderResponse saveWithDocumentsAndMap(Order order, List<Integer> documentIds) {
         Order savedOrder = orderRepo.save(order);
         assignDocuments(savedOrder, documentIds);
-        savedOrder.setDocuments(documentRepo.findByOrder_Id(savedOrder.getId()));
+        List<Document> refreshedDocuments = documentRepo.findByOrder_Id(savedOrder.getId());
+        savedOrder.getDocuments().clear();
+        savedOrder.getDocuments().addAll(refreshedDocuments);
         return OrderMapper.toResponse(savedOrder);
     }
 
@@ -189,6 +198,17 @@ public class OrderServiceImpl implements OrderService, CacheableService {
             return orderRepo.findByTranslator_Id(translatorId);
         }
         return orderRepo.findAll();
+    }
+
+    private Language parseLanguage(String languageCode) {
+        if (languageCode == null || languageCode.isBlank()) {
+            return null;
+        }
+        try {
+            return Language.fromCode(languageCode);
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage());
+        }
     }
 }
 

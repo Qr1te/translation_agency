@@ -17,6 +17,8 @@ public class OrderMapper {
                 o.getId(),
                 o.getTitle(),
                 o.getStatus(),
+                o.getSourceLanguage(),
+                o.getTargetLanguage(),
                 clientId,
                 translatorId,
                 docIds
@@ -26,6 +28,8 @@ public class OrderMapper {
     public static void updateEntity(Order o, OrderRequest request) {
         o.setTitle(request.getTitle());
         o.setStatus(request.getStatus());
+        o.setSourceLanguage(request.getSourceLanguage());
+        o.setTargetLanguage(request.getTargetLanguage());
     }
 
     public static void patchEntity(Order o, OrderRequest request) {
@@ -34,6 +38,12 @@ public class OrderMapper {
         }
         if (request.getStatus() != null) {
             o.setStatus(request.getStatus());
+        }
+        if (request.getSourceLanguage() != null) {
+            o.setSourceLanguage(request.getSourceLanguage());
+        }
+        if (request.getTargetLanguage() != null) {
+            o.setTargetLanguage(request.getTargetLanguage());
         }
     }
 }

@@ -2,6 +2,8 @@ package com.qritiooo.translationagency.model;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -38,6 +40,10 @@ public class Order {
     private BigDecimal totalPrice;
     private BigDecimal pricePerPage;
     private String status;
+    @Enumerated(EnumType.STRING)
+    private Language sourceLanguage;
+    @Enumerated(EnumType.STRING)
+    private Language targetLanguage;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id")

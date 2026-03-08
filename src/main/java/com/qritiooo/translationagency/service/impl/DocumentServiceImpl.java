@@ -14,6 +14,7 @@ import com.qritiooo.translationagency.service.DocumentService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,50 +22,54 @@ public class DocumentServiceImpl implements DocumentService, CacheableService {
 
     private final DocumentRepository docRepo;
     private final OrderRepository orderRepo;
+    private final OrderServiceImpl orderService;
     private final CacheStore cacheStore = new HashMapCacheStore();
 
     @Override
+    @Transactional
     public DocumentResponse create(DocumentRequest request) {
         Document d = new Document();
         DocumentMapper.updateEntity(d, request);
 
         if (request.getOrderId() != null) {
             Order o = orderRepo.findById(request.getOrderId()).orElseThrow();
-            d.setOrder(o);
+            bindDocumentToOrder(d, o);
         }
 
         DocumentResponse response = DocumentMapper.toResponse(docRepo.save(d));
-        invalidateCache();
+        invalidateRelatedCaches();
         return response;
     }
 
     @Override
+    @Transactional
     public DocumentResponse update(Integer id, DocumentRequest request) {
         Document d = docRepo.findById(id).orElseThrow();
         DocumentMapper.updateEntity(d, request);
 
         if (request.getOrderId() != null) {
             Order o = orderRepo.findById(request.getOrderId()).orElseThrow();
-            d.setOrder(o);
+            bindDocumentToOrder(d, o);
         }
 
         DocumentResponse response = DocumentMapper.toResponse(docRepo.save(d));
-        invalidateCache();
+        invalidateRelatedCaches();
         return response;
     }
 
     @Override
+    @Transactional
     public DocumentResponse patch(Integer id, DocumentRequest request) {
         Document d = docRepo.findById(id).orElseThrow();
         DocumentMapper.patchEntity(d, request);
 
         if (request.getOrderId() != null) {
             Order o = orderRepo.findById(request.getOrderId()).orElseThrow();
-            d.setOrder(o);
+            bindDocumentToOrder(d, o);
         }
 
         DocumentResponse response = DocumentMapper.toResponse(docRepo.save(d));
-        invalidateCache();
+        invalidateRelatedCaches();
         return response;
     }
 
@@ -88,9 +93,18 @@ public class DocumentServiceImpl implements DocumentService, CacheableService {
     }
 
     @Override
+    @Transactional
     public void delete(Integer id) {
-        docRepo.deleteById(id);
-        invalidateCache();
+        Document document = docRepo.findById(id).orElseThrow();
+        Order order = document.getOrder();
+
+        if (order != null) {
+            order.getDocuments().remove(document);
+            document.setOrder(null);
+        }
+
+        docRepo.delete(document);
+        invalidateRelatedCaches();
     }
 
     @Override
@@ -101,6 +115,25 @@ public class DocumentServiceImpl implements DocumentService, CacheableService {
     @Override
     public CacheStore getCacheStore() {
         return cacheStore;
+    }
+
+    private void bindDocumentToOrder(Document document, Order newOrder) {
+        Order oldOrder = document.getOrder();
+        boolean orderChanged = oldOrder != null
+                && oldOrder.getId() != null
+                && !oldOrder.getId().equals(newOrder.getId());
+        if (orderChanged) {
+            oldOrder.getDocuments().remove(document);
+        }
+        document.setOrder(newOrder);
+        if (!newOrder.getDocuments().contains(document)) {
+            newOrder.getDocuments().add(document);
+        }
+    }
+
+    private void invalidateRelatedCaches() {
+        invalidateCache();
+        orderService.invalidateCache();
     }
 }
 

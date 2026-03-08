@@ -1,14 +1,17 @@
 package com.qritiooo.translationagency.model;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
@@ -40,11 +43,20 @@ public class Translator {
     @OneToMany(mappedBy = "translator", fetch = FetchType.LAZY)
     private List<Order> orders = new ArrayList<>();
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinTable(
+    @ElementCollection(fetch = FetchType.LAZY, targetClass = Language.class)
+    @CollectionTable(
             name = "translator_languages",
-            joinColumns = @JoinColumn(name = "translator_id"),
-            inverseJoinColumns = @JoinColumn(name = "language_id")
+            joinColumns = @JoinColumn(name = "translator_id")
     )
+    @Column(name = "language_code", nullable = false)
+    @Enumerated(EnumType.STRING)
     private Set<Language> languages = new HashSet<>();
+
+    @OneToMany(
+            mappedBy = "translator",
+            fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<TranslatorTool> translatorTools = new ArrayList<>();
 }

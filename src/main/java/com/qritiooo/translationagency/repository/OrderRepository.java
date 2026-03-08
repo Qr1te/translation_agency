@@ -1,5 +1,6 @@
 package com.qritiooo.translationagency.repository;
 
+import com.qritiooo.translationagency.model.Language;
 import com.qritiooo.translationagency.model.Order;
 import java.util.List;
 import java.util.Optional;
@@ -13,6 +14,7 @@ import org.springframework.data.repository.query.Param;
 public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     @Override
+    @EntityGraph(attributePaths = {"client", "translator", "documents"})
     List<Order> findAll();
 
     @Override
@@ -38,11 +40,11 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             left join o.translator t
             left join t.languages l
             where (:status is null or o.status = :status)
-              and (:languageCode is null or lower(l.code) = lower(:languageCode))
+              and (:language is null or l = :language)
             """)
     Page<Order> searchByNestedJpql(
             @Param("status") String status,
-            @Param("languageCode") String languageCode,
+            @Param("language") Language language,
             Pageable pageable
     );
 
@@ -53,18 +55,16 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
                     from orders o
                     left join translators t on t.id = o.translator_id
                     left join translator_languages tl on tl.translator_id = t.id
-                    left join languages l on l.id = tl.language_id
                     where (:status is null or o.status = :status)
-                      and (:languageCode is null or lower(l.code) = lower(:languageCode))
+                      and (:languageCode is null or tl.language_code = :languageCode)
                     """,
             countQuery = """
                     select count(distinct o.id)
                     from orders o
                     left join translators t on t.id = o.translator_id
                     left join translator_languages tl on tl.translator_id = t.id
-                    left join languages l on l.id = tl.language_id
                     where (:status is null or o.status = :status)
-                      and (:languageCode is null or lower(l.code) = lower(:languageCode))
+                      and (:languageCode is null or tl.language_code = :languageCode)
                     """,
             nativeQuery = true
     )

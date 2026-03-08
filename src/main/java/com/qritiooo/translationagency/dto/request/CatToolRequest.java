@@ -9,8 +9,9 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class LanguageRequest {
-    private String code;
+public class CatToolRequest {
     private String name;
+    private String vendor;
+    private String currentVersion;
+    private Boolean cloudBased;
 }
-
