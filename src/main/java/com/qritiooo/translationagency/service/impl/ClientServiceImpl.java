@@ -1,8 +1,5 @@
 package com.qritiooo.translationagency.service.impl;
 
-import com.qritiooo.translationagency.cache.CacheStore;
-import com.qritiooo.translationagency.cache.CacheableService;
-import com.qritiooo.translationagency.cache.HashMapCacheStore;
 import com.qritiooo.translationagency.dto.request.ClientRequest;
 import com.qritiooo.translationagency.dto.response.ClientResponse;
 import com.qritiooo.translationagency.exception.NotFoundException;
@@ -16,10 +13,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class ClientServiceImpl implements ClientService, CacheableService {
+public class ClientServiceImpl extends BaseCacheableService implements ClientService {
 
     private final ClientRepository repo;
-    private final CacheStore cacheStore = new HashMapCacheStore();
 
     @Override
     public ClientResponse create(ClientRequest request) {
@@ -57,18 +53,12 @@ public class ClientServiceImpl implements ClientService, CacheableService {
 
     @Override
     public void delete(Integer id) {
-        repo.deleteById(id);
-        invalidateCache();
+        runAndInvalidate(() -> repo.deleteById(id));
     }
 
     @Override
     public String getCacheNamespace() {
         return "client";
-    }
-
-    @Override
-    public CacheStore getCacheStore() {
-        return cacheStore;
     }
 
     private Client getClientOrThrow(Integer id) {
