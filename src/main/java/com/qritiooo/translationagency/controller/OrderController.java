@@ -2,6 +2,7 @@ package com.qritiooo.translationagency.controller;
 
 import com.qritiooo.translationagency.dto.request.OrderRequest;
 import com.qritiooo.translationagency.dto.response.OrderResponse;
+import com.qritiooo.translationagency.model.OrderStatus;
 import com.qritiooo.translationagency.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -64,7 +65,7 @@ public class OrderController {
     @Operation(summary = "Get orders by filters")
     @ApiResponse(responseCode = "200", description = "Orders returned")
     public ResponseEntity<List<OrderResponse>> getAll(
-            @RequestParam(required = false) String status,
+            @RequestParam(required = false) OrderStatus status,
             @RequestParam(required = false) Integer clientId,
             @RequestParam(required = false) Integer translatorId
     ) {
@@ -75,7 +76,7 @@ public class OrderController {
     @Operation(summary = "Complex search with JPQL and pagination")
     @ApiResponse(responseCode = "200", description = "Orders returned")
     public ResponseEntity<Page<OrderResponse>> searchJpql(
-            @RequestParam(required = false) String status,
+            @RequestParam(required = false) OrderStatus status,
             @RequestParam(required = false) String languageCode,
             @PageableDefault(sort = "id") Pageable pageable
     ) {
@@ -86,7 +87,7 @@ public class OrderController {
     @Operation(summary = "Complex search with native query and pagination")
     @ApiResponse(responseCode = "200", description = "Orders returned")
     public ResponseEntity<Page<OrderResponse>> searchNative(
-            @RequestParam(required = false) String status,
+            @RequestParam(required = false) OrderStatus status,
             @RequestParam(required = false) String languageCode,
             @PageableDefault(sort = "id") Pageable pageable
     ) {

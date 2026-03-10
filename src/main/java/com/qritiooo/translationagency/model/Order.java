@@ -34,15 +34,17 @@ public class Order {
 
     private String title;
     private String description;
-    private String field;
-    private Integer pageCount;
-    private Integer totalPages;
     private BigDecimal totalPrice;
     private BigDecimal pricePerPage;
-    private String status;
     @Enumerated(EnumType.STRING)
+    private OrderStatus status;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "source_language_id")
     private Language sourceLanguage;
-    @Enumerated(EnumType.STRING)
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "target_language_id")
     private Language targetLanguage;
 
     @ManyToOne(fetch = FetchType.LAZY)

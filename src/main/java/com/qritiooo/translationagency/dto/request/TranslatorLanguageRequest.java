@@ -1,5 +1,6 @@
 package com.qritiooo.translationagency.dto.request;
 
+import com.qritiooo.translationagency.model.LanguageProficiencyLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,9 +10,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CatToolRequest {
-    private String name;
-    private String vendor;
-    private String currentVersion;
-    private Boolean cloudBased;
+public class TranslatorLanguageRequest {
+    private Integer languageId;
+    private LanguageProficiencyLevel proficiencyLevel;
 }

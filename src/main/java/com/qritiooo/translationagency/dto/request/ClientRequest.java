@@ -10,7 +10,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ClientRequest {
-    private String fullName;
+    private String firstName;
+    private String lastName;
     private String email;
 }
 

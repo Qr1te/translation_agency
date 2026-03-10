@@ -85,12 +85,12 @@ public class GlobalExceptionHandler {
             NoSuchElementException ex,
             HttpServletRequest request
     ) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                 new ApiError(
                         Instant.now(),
-                        HttpStatus.NOT_FOUND.value(),
-                        HttpStatus.NOT_FOUND.getReasonPhrase(),
-                        "Resource not found",
+                        HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                        HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+                        "Internal server error",
                         request.getRequestURI()
                 )
         );

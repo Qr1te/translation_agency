@@ -10,6 +10,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LanguageResponse {
+    private Integer id;
     private String code;
     private String name;
 }

@@ -11,13 +11,16 @@ import com.qritiooo.translationagency.mapper.OrderMapper;
 import com.qritiooo.translationagency.model.Document;
 import com.qritiooo.translationagency.model.Language;
 import com.qritiooo.translationagency.model.Order;
+import com.qritiooo.translationagency.model.OrderStatus;
 import com.qritiooo.translationagency.repository.ClientRepository;
 import com.qritiooo.translationagency.repository.DocumentRepository;
+import com.qritiooo.translationagency.repository.LanguageRepository;
 import com.qritiooo.translationagency.repository.OrderRepository;
 import com.qritiooo.translationagency.repository.TranslatorRepository;
 import com.qritiooo.translationagency.service.OrderService;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +35,7 @@ public class OrderServiceImpl implements OrderService, CacheableService {
     private final ClientRepository clientRepo;
     private final TranslatorRepository translatorRepo;
     private final DocumentRepository documentRepo;
+    private final LanguageRepository languageRepo;
     private final CacheStore cacheStore = new HashMapCacheStore();
 
     @Override
@@ -39,8 +43,31 @@ public class OrderServiceImpl implements OrderService, CacheableService {
     public OrderResponse create(OrderRequest request) {
         Order o = new Order();
         OrderMapper.updateEntity(o, request);
-        applyRelations(o, request);
-        OrderResponse response = saveWithDocumentsAndMap(o, request.getDocumentIds());
+
+        Order savedOrder = orderRepo.save(o);
+        if (request.getSourceLanguageId() != null) {
+            savedOrder.setSourceLanguage(
+                    languageRepo.findById(request.getSourceLanguageId()).orElseThrow()
+            );
+            savedOrder = orderRepo.save(savedOrder);
+        }
+        if (request.getTargetLanguageId() != null) {
+            savedOrder.setTargetLanguage(
+                    languageRepo.findById(request.getTargetLanguageId()).orElseThrow()
+            );
+            savedOrder = orderRepo.save(savedOrder);
+        }
+        if (request.getClientId() != null) {
+            savedOrder.setClient(clientRepo.findById(request.getClientId()).orElseThrow());
+            savedOrder = orderRepo.save(savedOrder);
+        }
+        if (request.getTranslatorId() != null) {
+            savedOrder.setTranslator(
+                    translatorRepo.findById(request.getTranslatorId()).orElseThrow()
+            );
+            savedOrder = orderRepo.save(savedOrder);
+        }
+        OrderResponse response = saveWithDocumentsAndMap(savedOrder, request.getDocumentIds());
         invalidateCache();
         return response;
     }
@@ -82,7 +109,7 @@ public class OrderServiceImpl implements OrderService, CacheableService {
     }
 
     @Override
-    public List<OrderResponse> getAll(String status, Integer clientId, Integer translatorId) {
+    public List<OrderResponse> getAll(OrderStatus status, Integer clientId, Integer translatorId) {
         return getOrLoad(
                 "getAll",
                 () -> findByFilters(status, clientId, translatorId).stream()
@@ -108,7 +135,7 @@ public class OrderServiceImpl implements OrderService, CacheableService {
     @Override
     @Transactional(readOnly = true)
     public Page<OrderResponse> searchByNestedJpql(
-            String status,
+            OrderStatus status,
             String languageCode,
             Pageable pageable
     ) {
@@ -117,8 +144,8 @@ public class OrderServiceImpl implements OrderService, CacheableService {
                 "searchByNestedJpql",
                 () -> orderRepo.searchByNestedJpql(status, language, pageable)
                         .map(OrderMapper::toResponse),
-                status,
-                language != null ? language.name() : null,
+                status != null ? status.name() : null,
+                language != null ? language.getCode() : null,
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
                 pageable.getSort().toString()
@@ -128,7 +155,7 @@ public class OrderServiceImpl implements OrderService, CacheableService {
     @Override
     @Transactional(readOnly = true)
     public Page<OrderResponse> searchByNestedNative(
-            String status,
+            OrderStatus status,
             String languageCode,
             Pageable pageable
     ) {
@@ -136,13 +163,13 @@ public class OrderServiceImpl implements OrderService, CacheableService {
         return getOrLoad(
                 "searchByNestedNative",
                 () -> orderRepo.searchByNestedNative(
-                        status,
-                        language != null ? language.name() : null,
+                        status != null ? status.name() : null,
+                        language != null ? language.getCode() : null,
                         pageable
                 )
                         .map(OrderMapper::toResponse),
-                status,
-                language != null ? language.name() : null,
+                status != null ? status.name() : null,
+                language != null ? language.getCode() : null,
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
                 pageable.getSort().toString()
@@ -173,6 +200,16 @@ public class OrderServiceImpl implements OrderService, CacheableService {
         if (request.getTranslatorId() != null) {
             order.setTranslator(translatorRepo.findById(request.getTranslatorId()).orElseThrow());
         }
+        if (request.getSourceLanguageId() != null) {
+            order.setSourceLanguage(
+                    languageRepo.findById(request.getSourceLanguageId()).orElseThrow()
+            );
+        }
+        if (request.getTargetLanguageId() != null) {
+            order.setTargetLanguage(
+                    languageRepo.findById(request.getTargetLanguageId()).orElseThrow()
+            );
+        }
     }
 
     private OrderResponse saveWithDocumentsAndMap(Order order, List<Integer> documentIds) {
@@ -184,7 +221,7 @@ public class OrderServiceImpl implements OrderService, CacheableService {
         return OrderMapper.toResponse(savedOrder);
     }
 
-    private List<Order> findByFilters(String status, Integer clientId, Integer translatorId) {
+    private List<Order> findByFilters(OrderStatus status, Integer clientId, Integer translatorId) {
         if (status != null) {
             return orderRepo.findByStatus(status);
         }
@@ -201,11 +238,24 @@ public class OrderServiceImpl implements OrderService, CacheableService {
         if (languageCode == null || languageCode.isBlank()) {
             return null;
         }
-        try {
-            return Language.fromCode(languageCode);
-        } catch (IllegalArgumentException ex) {
-            throw new BadRequestException(ex.getMessage());
-        }
+        String normalizedCode = normalizeLanguageCode(languageCode);
+        return languageRepo.findByCodeIgnoreCase(normalizedCode)
+                .orElseThrow(
+                        () -> new BadRequestException("Unknown language code: " + languageCode)
+                );
+    }
+
+    private String normalizeLanguageCode(String languageCode) {
+        return switch (languageCode.trim().toUpperCase(Locale.ROOT)) {
+            case "ENGLISH" -> "EN";
+            case "RUSSIAN" -> "RU";
+            case "GERMAN" -> "DE";
+            case "FRENCH" -> "FR";
+            case "ITALIAN" -> "IT";
+            case "SPANISH" -> "SP";
+            case "POLISH" -> "PL";
+            case "CHINESE" -> "CN";
+            default -> languageCode.trim().toUpperCase(Locale.ROOT);
+        };
     }
 }
-

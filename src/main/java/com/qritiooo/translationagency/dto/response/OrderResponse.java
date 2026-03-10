@@ -1,6 +1,6 @@
 package com.qritiooo.translationagency.dto.response;
 
-import com.qritiooo.translationagency.model.Language;
+import com.qritiooo.translationagency.model.OrderStatus;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,9 +14,9 @@ import lombok.Setter;
 public class OrderResponse {
     private Integer id;
     private String title;
-    private String status;
-    private Language sourceLanguage;
-    private Language targetLanguage;
+    private OrderStatus status;
+    private Integer sourceLanguageId;
+    private Integer targetLanguageId;
     private Integer clientId;
     private Integer translatorId;
     private List<Integer> documentIds;

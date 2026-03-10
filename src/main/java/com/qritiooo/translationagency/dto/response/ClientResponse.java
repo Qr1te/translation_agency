@@ -11,7 +11,8 @@ import lombok.Setter;
 @AllArgsConstructor
 public class ClientResponse {
     private Integer id;
-    private String fullName;
+    private String firstName;
+    private String lastName;
     private String email;
 }
 

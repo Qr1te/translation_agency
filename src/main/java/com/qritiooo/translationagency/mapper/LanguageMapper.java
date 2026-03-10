@@ -8,7 +8,7 @@ import lombok.experimental.UtilityClass;
 public class LanguageMapper {
 
     public static LanguageResponse toResponse(Language language) {
-        return new LanguageResponse(language.getCode(), language.getDisplayName());
+        return new LanguageResponse(language.getId(), language.getCode(), language.getName());
     }
 }
 

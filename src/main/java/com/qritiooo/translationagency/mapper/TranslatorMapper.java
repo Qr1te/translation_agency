@@ -1,58 +1,59 @@
 package com.qritiooo.translationagency.mapper;
 
 import com.qritiooo.translationagency.dto.request.TranslatorRequest;
+import com.qritiooo.translationagency.dto.response.TranslatorLanguageResponse;
 import com.qritiooo.translationagency.dto.response.TranslatorResponse;
-import com.qritiooo.translationagency.dto.response.TranslatorToolResponse;
 import com.qritiooo.translationagency.model.Language;
 import com.qritiooo.translationagency.model.Translator;
-import com.qritiooo.translationagency.model.TranslatorTool;
-import java.util.HashSet;
+import com.qritiooo.translationagency.model.TranslatorLanguage;
 import java.util.List;
-import java.util.Set;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class TranslatorMapper {
 
-    public static TranslatorResponse toResponse(Translator t) {
-        Set<Language> languages = new HashSet<>(t.getLanguages());
-        List<TranslatorToolResponse> tools = t
-                .getTranslatorTools()
+    public static TranslatorResponse toResponse(Translator translator) {
+        List<TranslatorLanguageResponse> languages = translator.getTranslatorLanguages()
                 .stream()
-                .map(TranslatorMapper::toToolResponse)
+                .map(TranslatorMapper::toLanguageResponse)
                 .toList();
+
         return new TranslatorResponse(
-                t.getId(),
-                t.getFullName(),
-                t.getRatePerPage(),
-                languages,
-                tools
+                translator.getId(),
+                translator.getFirstName(),
+                translator.getLastName(),
+                translator.getRatePerPage(),
+                languages
         );
     }
 
-    public static void updateEntity(Translator t, TranslatorRequest request) {
-        t.setFullName(request.getFullName());
-        t.setRatePerPage(request.getRatePerPage());
+    public static void updateEntity(Translator translator, TranslatorRequest request) {
+        translator.setFirstName(request.getFirstName());
+        translator.setLastName(request.getLastName());
+        translator.setRatePerPage(request.getRatePerPage());
     }
 
-    public static void patchEntity(Translator t, TranslatorRequest request) {
-        if (request.getFullName() != null) {
-            t.setFullName(request.getFullName());
+    public static void patchEntity(Translator translator, TranslatorRequest request) {
+        if (request.getFirstName() != null) {
+            translator.setFirstName(request.getFirstName());
+        }
+        if (request.getLastName() != null) {
+            translator.setLastName(request.getLastName());
         }
         if (request.getRatePerPage() != null) {
-            t.setRatePerPage(request.getRatePerPage());
+            translator.setRatePerPage(request.getRatePerPage());
         }
     }
 
-    private static TranslatorToolResponse toToolResponse(
-            TranslatorTool translatorTool
+    private static TranslatorLanguageResponse toLanguageResponse(
+            TranslatorLanguage translatorLanguage
     ) {
-        return new TranslatorToolResponse(
-                translatorTool.getTool().getId(),
-                translatorTool.getTool().getName(),
-                translatorTool.getLicenseExpiryDate(),
-                translatorTool.getProficiencyLevel()
+        Language language = translatorLanguage.getLanguage();
+        return new TranslatorLanguageResponse(
+                language.getId(),
+                language.getCode(),
+                language.getName(),
+                translatorLanguage.getProficiencyLevel()
         );
     }
 }
-

@@ -7,16 +7,19 @@ import com.qritiooo.translationagency.exception.NotFoundException;
 import com.qritiooo.translationagency.mapper.ClientMapper;
 import com.qritiooo.translationagency.model.Client;
 import com.qritiooo.translationagency.repository.ClientRepository;
+import com.qritiooo.translationagency.repository.OrderRepository;
 import com.qritiooo.translationagency.service.ClientService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class ClientServiceImpl extends BaseCacheableService implements ClientService {
 
     private final ClientRepository repo;
+    private final OrderRepository orderRepo;
 
     @Override
     public ClientResponse create(ClientRequest request) {
@@ -53,8 +56,12 @@ public class ClientServiceImpl extends BaseCacheableService implements ClientSer
     }
 
     @Override
+    @Transactional
     public void delete(Integer id) {
-        runAndInvalidate(() -> repo.deleteById(id));
+        Client client = getClientOrThrow(id);
+        orderRepo.findByClient_Id(id).forEach(order -> order.setClient(null));
+        repo.delete(client);
+        invalidateCache();
     }
 
     @Override

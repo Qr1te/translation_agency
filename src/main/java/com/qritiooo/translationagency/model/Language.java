@@ -1,54 +1,31 @@
 package com.qritiooo.translationagency.model;
 
-import java.util.Arrays;
-import java.util.Locale;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-public enum Language {
-    CN("Chinese"),
-    EN("English"),
-    RU("Russian"),
-    DE("German"),
-    FR("French"),
-    IT("Italian"),
-    SP("Spanish"),
-    PL("Polish");
+@Entity
+@Table(name = "languages")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class Language {
 
-    private final String displayName;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-    Language(String displayName) {
-        this.displayName = displayName;
-    }
+    @Column(nullable = false, unique = true)
+    private String code;
 
-    public String getCode() {
-        return name();
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public static Language fromCode(String code) {
-        String normalizedCode = normalizeCode(code);
-        return Arrays.stream(values())
-                .filter(language -> language.name().equalsIgnoreCase(normalizedCode))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Unknown language code: " + code));
-    }
-
-    private static String normalizeCode(String code) {
-        if (code == null) {
-            return null;
-        }
-        return switch (code.trim().toUpperCase(Locale.ROOT)) {
-            case "ENGLISH" -> "EN";
-            case "RUSSIAN" -> "RU";
-            case "GERMAN" -> "DE";
-            case "FRENCH" -> "FR";
-            case "ITALIAN" -> "IT";
-            case "SPANISH" -> "SP";
-            case "POLISH" -> "PL";
-            case "CHINESE" -> "CN";
-            default -> code.trim().toUpperCase(Locale.ROOT);
-        };
-    }
+    @Column(nullable = false, unique = true)
+    private String name;
 }

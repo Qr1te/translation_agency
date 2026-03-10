@@ -11,14 +11,20 @@ public class OrderMapper {
     public static OrderResponse toResponse(Order o) {
         Integer clientId = o.getClient() != null ? o.getClient().getId() : null;
         Integer translatorId = o.getTranslator() != null ? o.getTranslator().getId() : null;
+        Integer sourceLanguageId = o.getSourceLanguage() != null
+                ? o.getSourceLanguage().getId()
+                : null;
+        Integer targetLanguageId = o.getTargetLanguage() != null
+                ? o.getTargetLanguage().getId()
+                : null;
         var docIds = o.getDocuments().stream().map(Document::getId).toList();
 
         return new OrderResponse(
                 o.getId(),
                 o.getTitle(),
                 o.getStatus(),
-                o.getSourceLanguage(),
-                o.getTargetLanguage(),
+                sourceLanguageId,
+                targetLanguageId,
                 clientId,
                 translatorId,
                 docIds
@@ -28,8 +34,6 @@ public class OrderMapper {
     public static void updateEntity(Order o, OrderRequest request) {
         o.setTitle(request.getTitle());
         o.setStatus(request.getStatus());
-        o.setSourceLanguage(request.getSourceLanguage());
-        o.setTargetLanguage(request.getTargetLanguage());
     }
 
     public static void patchEntity(Order o, OrderRequest request) {
@@ -38,12 +42,6 @@ public class OrderMapper {
         }
         if (request.getStatus() != null) {
             o.setStatus(request.getStatus());
-        }
-        if (request.getSourceLanguage() != null) {
-            o.setSourceLanguage(request.getSourceLanguage());
-        }
-        if (request.getTargetLanguage() != null) {
-            o.setTargetLanguage(request.getTargetLanguage());
         }
     }
 }

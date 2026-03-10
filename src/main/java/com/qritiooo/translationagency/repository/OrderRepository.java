@@ -2,6 +2,7 @@ package com.qritiooo.translationagency.repository;
 
 import com.qritiooo.translationagency.model.Language;
 import com.qritiooo.translationagency.model.Order;
+import com.qritiooo.translationagency.model.OrderStatus;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -22,7 +23,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     Optional<Order> findById(Integer id);
 
     @EntityGraph(attributePaths = {"client", "translator", "documents"})
-    List<Order> findByStatus(String status);
+    List<Order> findByStatus(OrderStatus status);
 
     @EntityGraph(attributePaths = {"client", "translator", "documents"})
     List<Order> findByClient_Id(Integer clientId);
@@ -38,12 +39,13 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             select distinct o
             from Order o
             left join o.translator t
-            left join t.languages l
+            left join t.translatorLanguages tl
+            left join tl.language l
             where (:status is null or o.status = :status)
               and (:language is null or l = :language)
             """)
     Page<Order> searchByNestedJpql(
-            @Param("status") String status,
+            @Param("status") OrderStatus status,
             @Param("language") Language language,
             Pageable pageable
     );
@@ -55,16 +57,18 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
                     from orders o
                     left join translators t on t.id = o.translator_id
                     left join translator_languages tl on tl.translator_id = t.id
+                    left join languages l on l.id = tl.language_id
                     where (:status is null or o.status = :status)
-                      and (:languageCode is null or tl.language_code = :languageCode)
+                      and (:languageCode is null or l.code = :languageCode)
                     """,
             countQuery = """
                     select count(distinct o.id)
                     from orders o
                     left join translators t on t.id = o.translator_id
                     left join translator_languages tl on tl.translator_id = t.id
+                    left join languages l on l.id = tl.language_id
                     where (:status is null or o.status = :status)
-                      and (:languageCode is null or tl.language_code = :languageCode)
+                      and (:languageCode is null or l.code = :languageCode)
                     """,
             nativeQuery = true
     )
@@ -74,5 +78,3 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             Pageable pageable
     );
 }
-
-

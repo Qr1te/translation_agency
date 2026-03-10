@@ -1,9 +1,7 @@
 package com.qritiooo.translationagency.dto.response;
 
-import com.qritiooo.translationagency.model.Language;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,9 +13,9 @@ import lombok.Setter;
 @AllArgsConstructor
 public class TranslatorResponse {
     private Integer id;
-    private String fullName;
+    private String firstName;
+    private String lastName;
     private BigDecimal ratePerPage;
-    private Set<Language> languages;
-    private List<TranslatorToolResponse> tools;
+    private List<TranslatorLanguageResponse> languages;
 }
 

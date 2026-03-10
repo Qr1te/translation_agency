@@ -3,24 +3,21 @@ package com.qritiooo.translationagency.service.impl;
 import com.qritiooo.translationagency.cache.CacheStore;
 import com.qritiooo.translationagency.cache.CacheableService;
 import com.qritiooo.translationagency.cache.HashMapCacheStore;
+import com.qritiooo.translationagency.dto.request.TranslatorLanguageRequest;
 import com.qritiooo.translationagency.dto.request.TranslatorRequest;
-import com.qritiooo.translationagency.dto.request.TranslatorToolRequest;
 import com.qritiooo.translationagency.dto.response.TranslatorResponse;
 import com.qritiooo.translationagency.exception.BadRequestException;
 import com.qritiooo.translationagency.exception.NotFoundException;
 import com.qritiooo.translationagency.mapper.TranslatorMapper;
-import com.qritiooo.translationagency.model.CatTool;
+import com.qritiooo.translationagency.model.Language;
 import com.qritiooo.translationagency.model.Translator;
-import com.qritiooo.translationagency.model.TranslatorTool;
-import com.qritiooo.translationagency.repository.CatToolRepository;
+import com.qritiooo.translationagency.model.TranslatorLanguage;
+import com.qritiooo.translationagency.repository.LanguageRepository;
+import com.qritiooo.translationagency.repository.OrderRepository;
 import com.qritiooo.translationagency.repository.TranslatorRepository;
 import com.qritiooo.translationagency.service.TranslatorService;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,21 +28,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class TranslatorServiceImpl implements TranslatorService, CacheableService {
 
     private final TranslatorRepository translatorRepo;
-    private final CatToolRepository catToolRepo;
+    private final LanguageRepository languageRepo;
+    private final OrderRepository orderRepo;
     private final CacheStore cacheStore = new HashMapCacheStore();
 
     @Override
     @Transactional
     public TranslatorResponse create(TranslatorRequest request) {
-        Translator t = new Translator();
-        TranslatorMapper.updateEntity(t, request);
-
-        if (request.getLanguages() != null) {
-            t.setLanguages(new HashSet<>(request.getLanguages()));
-        }
-        syncTools(t, request.getTools());
-
-        TranslatorResponse response = TranslatorMapper.toResponse(translatorRepo.save(t));
+        Translator translator = new Translator();
+        TranslatorMapper.updateEntity(translator, request);
+        syncLanguages(translator, request.getLanguages());
+        TranslatorResponse response = TranslatorMapper.toResponse(translatorRepo.save(translator));
         invalidateCache();
         return response;
     }
@@ -53,15 +46,10 @@ public class TranslatorServiceImpl implements TranslatorService, CacheableServic
     @Override
     @Transactional
     public TranslatorResponse update(Integer id, TranslatorRequest request) {
-        Translator t = getTranslatorOrThrow(id);
-        TranslatorMapper.updateEntity(t, request);
-
-        if (request.getLanguages() != null) {
-            t.setLanguages(new HashSet<>(request.getLanguages()));
-        }
-        syncTools(t, request.getTools());
-
-        TranslatorResponse response = TranslatorMapper.toResponse(translatorRepo.save(t));
+        Translator translator = getTranslatorOrThrow(id);
+        TranslatorMapper.updateEntity(translator, request);
+        syncLanguages(translator, request.getLanguages());
+        TranslatorResponse response = TranslatorMapper.toResponse(translatorRepo.save(translator));
         invalidateCache();
         return response;
     }
@@ -69,17 +57,12 @@ public class TranslatorServiceImpl implements TranslatorService, CacheableServic
     @Override
     @Transactional
     public TranslatorResponse patch(Integer id, TranslatorRequest request) {
-        Translator t = getTranslatorOrThrow(id);
-        TranslatorMapper.patchEntity(t, request);
-
+        Translator translator = getTranslatorOrThrow(id);
+        TranslatorMapper.patchEntity(translator, request);
         if (request.getLanguages() != null) {
-            t.setLanguages(new HashSet<>(request.getLanguages()));
+            syncLanguages(translator, request.getLanguages());
         }
-        if (request.getTools() != null) {
-            syncTools(t, request.getTools());
-        }
-
-        TranslatorResponse response = TranslatorMapper.toResponse(translatorRepo.save(t));
+        TranslatorResponse response = TranslatorMapper.toResponse(translatorRepo.save(translator));
         invalidateCache();
         return response;
     }
@@ -98,8 +81,11 @@ public class TranslatorServiceImpl implements TranslatorService, CacheableServic
     }
 
     @Override
+    @Transactional
     public void delete(Integer id) {
-        translatorRepo.deleteById(id);
+        Translator translator = getTranslatorOrThrow(id);
+        orderRepo.findByTranslator_Id(id).forEach(order -> order.setTranslator(null));
+        translatorRepo.delete(translator);
         invalidateCache();
     }
 
@@ -113,99 +99,57 @@ public class TranslatorServiceImpl implements TranslatorService, CacheableServic
         return cacheStore;
     }
 
-    private void syncTools(Translator translator, List<TranslatorToolRequest> toolRequests) {
-        if (toolRequests == null) {
-            return;
-        }
-
-        Map<Integer, TranslatorTool> existingByToolId = mapExistingToolsById(translator);
-        Set<Integer> requestedToolIds = collectRequestedToolIds(toolRequests);
-        removeUnrequestedTools(translator, requestedToolIds);
-        applyToolRequests(translator, toolRequests, existingByToolId);
-    }
-
     private Translator getTranslatorOrThrow(Integer id) {
         return translatorRepo.findById(id).orElseThrow(
                 () -> new NotFoundException("Translator not found with id: " + id)
         );
     }
 
-    private Map<Integer, TranslatorTool> mapExistingToolsById(Translator translator) {
-        Map<Integer, TranslatorTool> existingByToolId = new HashMap<>();
-        for (TranslatorTool existing : translator.getTranslatorTools()) {
-            if (existing.getTool() != null && existing.getTool().getId() != null) {
-                existingByToolId.put(existing.getTool().getId(), existing);
-            }
-        }
-        return existingByToolId;
-    }
-
-    private Set<Integer> collectRequestedToolIds(List<TranslatorToolRequest> toolRequests) {
-        Set<Integer> requestedToolIds = new LinkedHashSet<>();
-        for (TranslatorToolRequest toolRequest : toolRequests) {
-            Integer toolId = toolRequest.getToolId();
-            if (toolId == null) {
-                throw new BadRequestException("toolId is required for each tool item");
-            }
-            if (!requestedToolIds.add(toolId)) {
-                throw new BadRequestException("Duplicate toolId in request: " + toolId);
-            }
-        }
-        return requestedToolIds;
-    }
-
-    private void removeUnrequestedTools(Translator translator, Set<Integer> requestedToolIds) {
-        List<TranslatorTool> toRemove = new ArrayList<>();
-        for (TranslatorTool existing : translator.getTranslatorTools()) {
-            Integer existingToolId = existing.getTool() != null ? existing.getTool().getId() : null;
-            if (existingToolId == null || !requestedToolIds.contains(existingToolId)) {
-                toRemove.add(existing);
-            }
-        }
-        translator.getTranslatorTools().removeAll(toRemove);
-    }
-
-    private void applyToolRequests(
+    private void syncLanguages(
             Translator translator,
-            List<TranslatorToolRequest> toolRequests,
-            Map<Integer, TranslatorTool> existingByToolId
+            List<TranslatorLanguageRequest> languageRequests
     ) {
-        for (TranslatorToolRequest toolRequest : toolRequests) {
-            Integer toolId = toolRequest.getToolId();
-            CatTool tool = getToolOrThrow(toolId);
-            TranslatorTool translatorTool = getOrCreateTranslatorTool(
-                    translator,
-                    existingByToolId,
-                    toolId,
-                    tool
+        if (languageRequests == null) {
+            translator.getTranslatorLanguages().clear();
+            return;
+        }
+
+        ensureNoDuplicateLanguageIds(languageRequests);
+        translator.getTranslatorLanguages().clear();
+
+        for (TranslatorLanguageRequest languageRequest : languageRequests) {
+            Integer languageId = languageRequest.getLanguageId();
+            if (languageId == null) {
+                throw new BadRequestException("languageId is required for each language item");
+            }
+            if (languageRequest.getProficiencyLevel() == null) {
+                throw new BadRequestException(
+                        "proficiencyLevel is required for languageId: " + languageId
+                );
+            }
+
+            Language language = languageRepo.findById(languageId).orElseThrow(
+                    () -> new NotFoundException("Language not found with id: " + languageId)
             );
-            translatorTool.setLicenseExpiryDate(toolRequest.getLicenseExpiryDate());
-            translatorTool.setProficiencyLevel(toolRequest.getProficiencyLevel());
+
+            TranslatorLanguage translatorLanguage = new TranslatorLanguage();
+            translatorLanguage.setTranslator(translator);
+            translatorLanguage.setLanguage(language);
+            translatorLanguage.setProficiencyLevel(languageRequest.getProficiencyLevel());
+            translator.getTranslatorLanguages().add(translatorLanguage);
         }
     }
 
-    private CatTool getToolOrThrow(Integer toolId) {
-        return catToolRepo.findById(toolId).orElseThrow(
-                () -> new NotFoundException("CAT tool not found with id: " + toolId)
-        );
-    }
-
-    private TranslatorTool getOrCreateTranslatorTool(
-            Translator translator,
-            Map<Integer, TranslatorTool> existingByToolId,
-            Integer toolId,
-            CatTool tool
-    ) {
-        TranslatorTool translatorTool = existingByToolId.get(toolId);
-        if (translatorTool != null) {
-            return translatorTool;
+    private void ensureNoDuplicateLanguageIds(List<TranslatorLanguageRequest> languageRequests) {
+        Set<Integer> seenLanguageIds = new HashSet<>();
+        for (TranslatorLanguageRequest languageRequest : languageRequests) {
+            Integer languageId = languageRequest.getLanguageId();
+            if (languageId == null) {
+                continue;
+            }
+            if (!seenLanguageIds.add(languageId)) {
+                throw new BadRequestException("Duplicate languageId in request: " + languageId);
+            }
         }
-
-        TranslatorTool newTranslatorTool = new TranslatorTool();
-        newTranslatorTool.setTranslator(translator);
-        newTranslatorTool.setTool(tool);
-        translator.getTranslatorTools().add(newTranslatorTool);
-        return newTranslatorTool;
     }
 }
-

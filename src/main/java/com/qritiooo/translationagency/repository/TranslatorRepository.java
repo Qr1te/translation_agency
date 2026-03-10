@@ -9,11 +9,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface TranslatorRepository extends JpaRepository<Translator, Integer> {
 
     @Override
-    @EntityGraph(attributePaths = {"languages", "translatorTools", "translatorTools.tool"})
+    @EntityGraph(attributePaths = {"translatorLanguages", "translatorLanguages.language"})
     List<Translator> findAll();
 
     @Override
-    @EntityGraph(attributePaths = {"languages", "translatorTools", "translatorTools.tool"})
+    @EntityGraph(attributePaths = {"translatorLanguages", "translatorLanguages.language"})
     Optional<Translator> findById(Integer id);
 }
 
