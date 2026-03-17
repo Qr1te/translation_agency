@@ -3,6 +3,7 @@ package com.qritiooo.translationagency.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.util.List;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 @RestControllerAdvice
+@Order(1)
 public class ValidationExceptionHandler extends AbstractExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

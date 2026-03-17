@@ -2,6 +2,7 @@ package com.qritiooo.translationagency.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -13,6 +14,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
+@Order(2)
 public class RequestExceptionHandler extends AbstractExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

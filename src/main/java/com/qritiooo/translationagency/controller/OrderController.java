@@ -11,9 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -86,7 +84,7 @@ public class OrderController {
     @GetMapping("/search/jpql")
     @Operation(summary = "Complex search with JPQL and pagination")
     @ApiResponse(responseCode = "200", description = "Orders returned")
-    public ResponseEntity<Map<String, Object>> searchJpql(
+    public ResponseEntity<PagedOrderResponse> searchJpql(
             @RequestParam(required = false) OrderStatus status,
             @RequestParam(required = false) String languageCode,
             @PageableDefault(sort = "id") Pageable pageable
@@ -102,7 +100,7 @@ public class OrderController {
     @GetMapping("/search/native")
     @Operation(summary = "Complex search with native query and pagination")
     @ApiResponse(responseCode = "200", description = "Orders returned")
-    public ResponseEntity<Map<String, Object>> searchNative(
+    public ResponseEntity<PagedOrderResponse> searchNative(
             @RequestParam(required = false) OrderStatus status,
             @RequestParam(required = false) String languageCode,
             @PageableDefault(sort = "id") Pageable pageable
@@ -154,16 +152,30 @@ public class OrderController {
         return ResponseEntity.noContent().build();
     }
 
-    private Map<String, Object> toPageResponse(Page<OrderResponse> page) {
-        Map<String, Object> pageMeta = new LinkedHashMap<>();
-        pageMeta.put("size", page.getSize());
-        pageMeta.put("number", page.getNumber());
-        pageMeta.put("totalElements", page.getTotalElements());
-        pageMeta.put("totalPages", page.getTotalPages());
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("content", page.getContent());
-        response.put("page", pageMeta);
-        return response;
+    private PagedOrderResponse toPageResponse(Page<OrderResponse> page) {
+        return new PagedOrderResponse(
+                page.getContent(),
+                new PageMeta(
+                        page.getSize(),
+                        page.getNumber(),
+                        page.getTotalElements(),
+                        page.getTotalPages()
+                )
+        );
+    }
+
+    public static record PagedOrderResponse(
+            List<OrderResponse> content,
+            PageMeta page
+    ) {
+    }
+
+    public static record PageMeta(
+            int size,
+            int number,
+            long totalElements,
+            int totalPages
+    ) {
     }
 }
 
