@@ -43,8 +43,7 @@ public class ServiceLoggingAspect {
             log.error(
                     "Method {} failed in {} ms",
                     methodName,
-                    System.currentTimeMillis() - start,
-                    exception
+                    System.currentTimeMillis() - start
             );
             throw exception;
         }
