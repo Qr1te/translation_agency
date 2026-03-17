@@ -1,5 +1,8 @@
 package com.qritiooo.translationagency.controller;
 
+import com.qritiooo.translationagency.api.validation.OnCreate;
+import com.qritiooo.translationagency.api.validation.OnPatch;
+import com.qritiooo.translationagency.api.validation.OnUpdate;
 import com.qritiooo.translationagency.dto.request.OrderRequest;
 import com.qritiooo.translationagency.dto.response.OrderResponse;
 import com.qritiooo.translationagency.model.OrderStatus;
@@ -7,12 +10,16 @@ import com.qritiooo.translationagency.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -27,6 +34,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/orders")
+@Validated
+@Tag(name = "Orders", description = "Order management and search endpoints")
 public class OrderController {
 
     private final OrderService orderService;
@@ -37,7 +46,9 @@ public class OrderController {
             @ApiResponse(responseCode = "200", description = "Order created"),
             @ApiResponse(responseCode = "400", description = "Invalid request")
     })
-    public ResponseEntity<OrderResponse> create(@RequestBody OrderRequest request) {
+    public ResponseEntity<OrderResponse> create(
+            @Validated(OnCreate.class) @RequestBody OrderRequest request
+    ) {
         return ResponseEntity.ok(orderService.create(request));
     }
 
@@ -47,7 +58,7 @@ public class OrderController {
             @ApiResponse(responseCode = "200", description = "Order found"),
             @ApiResponse(responseCode = "404", description = "Order not found")
     })
-    public ResponseEntity<OrderResponse> getById(@PathVariable Integer id) {
+    public ResponseEntity<OrderResponse> getById(@Positive @PathVariable Integer id) {
         return ResponseEntity.ok(orderService.getById(id));
     }
 
@@ -57,7 +68,7 @@ public class OrderController {
             @ApiResponse(responseCode = "200", description = "Order found"),
             @ApiResponse(responseCode = "404", description = "Order not found")
     })
-    public ResponseEntity<OrderResponse> getByTitle(@RequestParam String title) {
+    public ResponseEntity<OrderResponse> getByTitle(@NotBlank @RequestParam String title) {
         return ResponseEntity.ok(orderService.getByTitle(title));
     }
 
@@ -66,8 +77,8 @@ public class OrderController {
     @ApiResponse(responseCode = "200", description = "Orders returned")
     public ResponseEntity<List<OrderResponse>> getAll(
             @RequestParam(required = false) OrderStatus status,
-            @RequestParam(required = false) Integer clientId,
-            @RequestParam(required = false) Integer translatorId
+            @Positive @RequestParam(required = false) Integer clientId,
+            @Positive @RequestParam(required = false) Integer translatorId
     ) {
         return ResponseEntity.ok(orderService.getAll(status, clientId, translatorId));
     }
@@ -104,8 +115,8 @@ public class OrderController {
             @ApiResponse(responseCode = "404", description = "Order not found")
     })
     public ResponseEntity<OrderResponse> update(
-            @PathVariable Integer id,
-            @RequestBody OrderRequest request
+            @Positive @PathVariable Integer id,
+            @Validated(OnUpdate.class) @RequestBody OrderRequest request
     ) {
         return ResponseEntity.ok(orderService.update(id, request));
     }
@@ -118,8 +129,8 @@ public class OrderController {
             @ApiResponse(responseCode = "404", description = "Order not found")
     })
     public ResponseEntity<OrderResponse> patch(
-            @PathVariable Integer id,
-            @RequestBody OrderRequest request
+            @Positive @PathVariable Integer id,
+            @Validated(OnPatch.class) @RequestBody OrderRequest request
     ) {
         return ResponseEntity.ok(orderService.patch(id, request));
     }
@@ -130,7 +141,7 @@ public class OrderController {
             @ApiResponse(responseCode = "204", description = "Order deleted"),
             @ApiResponse(responseCode = "404", description = "Order not found")
     })
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ResponseEntity<Void> delete(@Positive @PathVariable Integer id) {
         orderService.delete(id);
         return ResponseEntity.noContent().build();
     }

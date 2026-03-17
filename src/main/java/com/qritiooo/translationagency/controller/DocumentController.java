@@ -1,14 +1,20 @@
 package com.qritiooo.translationagency.controller;
 
+import com.qritiooo.translationagency.api.validation.OnCreate;
+import com.qritiooo.translationagency.api.validation.OnPatch;
+import com.qritiooo.translationagency.api.validation.OnUpdate;
 import com.qritiooo.translationagency.dto.request.DocumentRequest;
 import com.qritiooo.translationagency.dto.response.DocumentResponse;
 import com.qritiooo.translationagency.service.DocumentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Positive;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -23,6 +29,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/documents")
+@Validated
+@Tag(name = "Documents", description = "Document management endpoints")
 public class DocumentController {
 
     private final DocumentService service;
@@ -33,7 +41,9 @@ public class DocumentController {
             @ApiResponse(responseCode = "200", description = "Document created"),
             @ApiResponse(responseCode = "400", description = "Invalid request")
     })
-    public ResponseEntity<DocumentResponse> create(@RequestBody DocumentRequest request) {
+    public ResponseEntity<DocumentResponse> create(
+            @Validated(OnCreate.class) @RequestBody DocumentRequest request
+    ) {
         return ResponseEntity.ok(service.create(request));
     }
 
@@ -45,8 +55,8 @@ public class DocumentController {
             @ApiResponse(responseCode = "404", description = "Document not found")
     })
     public ResponseEntity<DocumentResponse> update(
-            @PathVariable Integer id,
-            @RequestBody DocumentRequest request
+            @Positive @PathVariable Integer id,
+            @Validated(OnUpdate.class) @RequestBody DocumentRequest request
     ) {
         return ResponseEntity.ok(service.update(id, request));
     }
@@ -59,8 +69,8 @@ public class DocumentController {
             @ApiResponse(responseCode = "404", description = "Document not found")
     })
     public ResponseEntity<DocumentResponse> patch(
-            @PathVariable Integer id,
-            @RequestBody DocumentRequest request
+            @Positive @PathVariable Integer id,
+            @Validated(OnPatch.class) @RequestBody DocumentRequest request
     ) {
         return ResponseEntity.ok(service.patch(id, request));
     }
@@ -71,7 +81,7 @@ public class DocumentController {
             @ApiResponse(responseCode = "200", description = "Document found"),
             @ApiResponse(responseCode = "404", description = "Document not found")
     })
-    public ResponseEntity<DocumentResponse> getById(@PathVariable Integer id) {
+    public ResponseEntity<DocumentResponse> getById(@Positive @PathVariable Integer id) {
         return ResponseEntity.ok(service.getById(id));
     }
 
@@ -79,7 +89,7 @@ public class DocumentController {
     @Operation(summary = "Get documents")
     @ApiResponse(responseCode = "200", description = "Documents returned")
     public ResponseEntity<List<DocumentResponse>> getAll(
-            @RequestParam(required = false) Integer orderId
+            @Positive @RequestParam(required = false) Integer orderId
     ) {
         return ResponseEntity.ok(service.getAll(orderId));
     }
@@ -90,7 +100,7 @@ public class DocumentController {
             @ApiResponse(responseCode = "204", description = "Document deleted"),
             @ApiResponse(responseCode = "404", description = "Document not found")
     })
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ResponseEntity<Void> delete(@Positive @PathVariable Integer id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }

@@ -1,5 +1,6 @@
 package com.qritiooo.translationagency.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -11,6 +12,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "Translator response DTO")
 public class TranslatorResponse {
     private Integer id;
     private String firstName;

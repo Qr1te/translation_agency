@@ -1,8 +1,6 @@
 package com.qritiooo.translationagency.service.impl;
 
-import com.qritiooo.translationagency.cache.CacheStore;
-import com.qritiooo.translationagency.cache.CacheableService;
-import com.qritiooo.translationagency.cache.HashMapCacheStore;
+import com.qritiooo.translationagency.config.CacheNames;
 import com.qritiooo.translationagency.dto.response.LanguageResponse;
 import com.qritiooo.translationagency.exception.NotFoundException;
 import com.qritiooo.translationagency.mapper.LanguageMapper;
@@ -12,14 +10,16 @@ import com.qritiooo.translationagency.service.LanguageService;
 import java.util.List;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class LanguageServiceImpl implements LanguageService, CacheableService {
+@CacheConfig(cacheNames = CacheNames.LANGUAGES_ALL)
+public class LanguageServiceImpl implements LanguageService {
 
     private final LanguageRepository languageRepository;
-    private final CacheStore cacheStore = new HashMapCacheStore();
 
     @Override
     public LanguageResponse getByCode(String code) {
@@ -31,21 +31,9 @@ public class LanguageServiceImpl implements LanguageService, CacheableService {
     }
 
     @Override
+    @Cacheable(sync = true)
     public List<LanguageResponse> getAll() {
-        return getOrLoad(
-                "getAll",
-                () -> languageRepository.findAll().stream().map(LanguageMapper::toResponse).toList()
-        );
-    }
-
-    @Override
-    public String getCacheNamespace() {
-        return "language";
-    }
-
-    @Override
-    public CacheStore getCacheStore() {
-        return cacheStore;
+        return languageRepository.findAll().stream().map(LanguageMapper::toResponse).toList();
     }
 
     private String normalizeCode(String code) {

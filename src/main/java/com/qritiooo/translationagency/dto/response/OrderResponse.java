@@ -1,6 +1,7 @@
 package com.qritiooo.translationagency.dto.response;
 
 import com.qritiooo.translationagency.model.OrderStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,6 +12,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "Order response DTO")
 public class OrderResponse {
     private Integer id;
     private String title;

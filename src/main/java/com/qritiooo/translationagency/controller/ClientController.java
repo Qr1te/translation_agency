@@ -1,14 +1,20 @@
 package com.qritiooo.translationagency.controller;
 
+import com.qritiooo.translationagency.api.validation.OnCreate;
+import com.qritiooo.translationagency.api.validation.OnPatch;
+import com.qritiooo.translationagency.api.validation.OnUpdate;
 import com.qritiooo.translationagency.dto.request.ClientRequest;
 import com.qritiooo.translationagency.dto.response.ClientResponse;
 import com.qritiooo.translationagency.service.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Positive;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -22,6 +28,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/clients")
+@Validated
+@Tag(name = "Clients", description = "Client management endpoints")
 public class ClientController {
 
     private final ClientService service;
@@ -32,7 +40,9 @@ public class ClientController {
             @ApiResponse(responseCode = "200", description = "Client created"),
             @ApiResponse(responseCode = "400", description = "Invalid request")
     })
-    public ResponseEntity<ClientResponse> create(@RequestBody ClientRequest request) {
+    public ResponseEntity<ClientResponse> create(
+            @Validated(OnCreate.class) @RequestBody ClientRequest request
+    ) {
         return ResponseEntity.ok(service.create(request));
     }
 
@@ -44,8 +54,8 @@ public class ClientController {
             @ApiResponse(responseCode = "404", description = "Client not found")
     })
     public ResponseEntity<ClientResponse> update(
-            @PathVariable Integer id,
-            @RequestBody ClientRequest request
+            @Positive @PathVariable Integer id,
+            @Validated(OnUpdate.class) @RequestBody ClientRequest request
     ) {
         return ResponseEntity.ok(service.update(id, request));
     }
@@ -58,8 +68,8 @@ public class ClientController {
             @ApiResponse(responseCode = "404", description = "Client not found")
     })
     public ResponseEntity<ClientResponse> patch(
-            @PathVariable Integer id,
-            @RequestBody ClientRequest request
+            @Positive @PathVariable Integer id,
+            @Validated(OnPatch.class) @RequestBody ClientRequest request
     ) {
         return ResponseEntity.ok(service.patch(id, request));
     }
@@ -70,7 +80,7 @@ public class ClientController {
             @ApiResponse(responseCode = "200", description = "Client found"),
             @ApiResponse(responseCode = "404", description = "Client not found")
     })
-    public ResponseEntity<ClientResponse> getById(@PathVariable Integer id) {
+    public ResponseEntity<ClientResponse> getById(@Positive @PathVariable Integer id) {
         return ResponseEntity.ok(service.getById(id));
     }
 
@@ -87,7 +97,7 @@ public class ClientController {
             @ApiResponse(responseCode = "204", description = "Client deleted"),
             @ApiResponse(responseCode = "404", description = "Client not found")
     })
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ResponseEntity<Void> delete(@Positive @PathVariable Integer id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }

@@ -1,8 +1,6 @@
 package com.qritiooo.translationagency.service.impl;
 
-import com.qritiooo.translationagency.cache.CacheStore;
-import com.qritiooo.translationagency.cache.CacheableService;
-import com.qritiooo.translationagency.cache.HashMapCacheStore;
+import com.qritiooo.translationagency.config.CacheNames;
 import com.qritiooo.translationagency.dto.request.TranslatorLanguageRequest;
 import com.qritiooo.translationagency.dto.request.TranslatorRequest;
 import com.qritiooo.translationagency.dto.response.TranslatorResponse;
@@ -20,51 +18,51 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class TranslatorServiceImpl implements TranslatorService, CacheableService {
+@CacheConfig(cacheNames = CacheNames.TRANSLATORS_ALL)
+public class TranslatorServiceImpl implements TranslatorService {
 
     private final TranslatorRepository translatorRepo;
     private final LanguageRepository languageRepo;
     private final OrderRepository orderRepo;
-    private final CacheStore cacheStore = new HashMapCacheStore();
 
     @Override
     @Transactional
+    @CacheEvict(allEntries = true)
     public TranslatorResponse create(TranslatorRequest request) {
         Translator translator = new Translator();
         TranslatorMapper.updateEntity(translator, request);
         syncLanguages(translator, request.getLanguages());
-        TranslatorResponse response = TranslatorMapper.toResponse(translatorRepo.save(translator));
-        invalidateCache();
-        return response;
+        return TranslatorMapper.toResponse(translatorRepo.save(translator));
     }
 
     @Override
     @Transactional
+    @CacheEvict(allEntries = true)
     public TranslatorResponse update(Integer id, TranslatorRequest request) {
         Translator translator = getTranslatorOrThrow(id);
         TranslatorMapper.updateEntity(translator, request);
         syncLanguages(translator, request.getLanguages());
-        TranslatorResponse response = TranslatorMapper.toResponse(translatorRepo.save(translator));
-        invalidateCache();
-        return response;
+        return TranslatorMapper.toResponse(translatorRepo.save(translator));
     }
 
     @Override
     @Transactional
+    @CacheEvict(allEntries = true)
     public TranslatorResponse patch(Integer id, TranslatorRequest request) {
         Translator translator = getTranslatorOrThrow(id);
         TranslatorMapper.patchEntity(translator, request);
         if (request.getLanguages() != null) {
             syncLanguages(translator, request.getLanguages());
         }
-        TranslatorResponse response = TranslatorMapper.toResponse(translatorRepo.save(translator));
-        invalidateCache();
-        return response;
+        return TranslatorMapper.toResponse(translatorRepo.save(translator));
     }
 
     @Override
@@ -73,30 +71,18 @@ public class TranslatorServiceImpl implements TranslatorService, CacheableServic
     }
 
     @Override
+    @Cacheable(sync = true)
     public List<TranslatorResponse> getAll() {
-        return getOrLoad(
-                "getAll",
-                () -> translatorRepo.findAll().stream().map(TranslatorMapper::toResponse).toList()
-        );
+        return translatorRepo.findAll().stream().map(TranslatorMapper::toResponse).toList();
     }
 
     @Override
     @Transactional
+    @CacheEvict(allEntries = true)
     public void delete(Integer id) {
         Translator translator = getTranslatorOrThrow(id);
         orderRepo.findByTranslator_Id(id).forEach(order -> order.setTranslator(null));
         translatorRepo.delete(translator);
-        invalidateCache();
-    }
-
-    @Override
-    public String getCacheNamespace() {
-        return "translator";
-    }
-
-    @Override
-    public CacheStore getCacheStore() {
-        return cacheStore;
     }
 
     private Translator getTranslatorOrThrow(Integer id) {

@@ -50,7 +50,6 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             Pageable pageable
     );
 
-    @EntityGraph(attributePaths = {"client", "translator", "documents"})
     @Query(
             value = """
                     select distinct o.*
