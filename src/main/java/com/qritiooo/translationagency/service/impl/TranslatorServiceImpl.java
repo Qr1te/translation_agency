@@ -1,6 +1,7 @@
 package com.qritiooo.translationagency.service.impl;
 
-import com.qritiooo.translationagency.config.CacheNames;
+import com.qritiooo.translationagency.cache.CacheKey;
+import com.qritiooo.translationagency.cache.CacheManager;
 import com.qritiooo.translationagency.dto.request.TranslatorLanguageRequest;
 import com.qritiooo.translationagency.dto.request.TranslatorRequest;
 import com.qritiooo.translationagency.dto.response.TranslatorResponse;
@@ -8,6 +9,7 @@ import com.qritiooo.translationagency.exception.BadRequestException;
 import com.qritiooo.translationagency.exception.NotFoundException;
 import com.qritiooo.translationagency.mapper.TranslatorMapper;
 import com.qritiooo.translationagency.model.Language;
+import com.qritiooo.translationagency.model.Order;
 import com.qritiooo.translationagency.model.Translator;
 import com.qritiooo.translationagency.model.TranslatorLanguage;
 import com.qritiooo.translationagency.repository.LanguageRepository;
@@ -18,51 +20,51 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@CacheConfig(cacheNames = CacheNames.TRANSLATORS_ALL)
 public class TranslatorServiceImpl implements TranslatorService {
 
     private final TranslatorRepository translatorRepo;
     private final LanguageRepository languageRepo;
     private final OrderRepository orderRepo;
+    private final CacheManager cacheManager;
 
     @Override
     @Transactional
-    @CacheEvict(allEntries = true)
     public TranslatorResponse create(TranslatorRequest request) {
         Translator translator = new Translator();
         TranslatorMapper.updateEntity(translator, request);
         syncLanguages(translator, request.getLanguages());
-        return TranslatorMapper.toResponse(translatorRepo.save(translator));
+        TranslatorResponse response = TranslatorMapper.toResponse(translatorRepo.save(translator));
+        cacheManager.invalidate(Translator.class, Order.class);
+        return response;
     }
 
     @Override
     @Transactional
-    @CacheEvict(allEntries = true)
     public TranslatorResponse update(Integer id, TranslatorRequest request) {
         Translator translator = getTranslatorOrThrow(id);
         TranslatorMapper.updateEntity(translator, request);
         syncLanguages(translator, request.getLanguages());
-        return TranslatorMapper.toResponse(translatorRepo.save(translator));
+        TranslatorResponse response = TranslatorMapper.toResponse(translatorRepo.save(translator));
+        cacheManager.invalidate(Translator.class, Order.class);
+        return response;
     }
 
     @Override
     @Transactional
-    @CacheEvict(allEntries = true)
     public TranslatorResponse patch(Integer id, TranslatorRequest request) {
         Translator translator = getTranslatorOrThrow(id);
         TranslatorMapper.patchEntity(translator, request);
         if (request.getLanguages() != null) {
             syncLanguages(translator, request.getLanguages());
         }
-        return TranslatorMapper.toResponse(translatorRepo.save(translator));
+        TranslatorResponse response = TranslatorMapper.toResponse(translatorRepo.save(translator));
+        cacheManager.invalidate(Translator.class, Order.class);
+        return response;
     }
 
     @Override
@@ -71,18 +73,21 @@ public class TranslatorServiceImpl implements TranslatorService {
     }
 
     @Override
-    @Cacheable(sync = true)
     public List<TranslatorResponse> getAll() {
-        return translatorRepo.findAll().stream().map(TranslatorMapper::toResponse).toList();
+        CacheKey key = new CacheKey(Translator.class, "getAll");
+        return cacheManager.computeIfAbsent(
+                key,
+                () -> translatorRepo.findAll().stream().map(TranslatorMapper::toResponse).toList()
+        );
     }
 
     @Override
     @Transactional
-    @CacheEvict(allEntries = true)
     public void delete(Integer id) {
         Translator translator = getTranslatorOrThrow(id);
         orderRepo.findByTranslator_Id(id).forEach(order -> order.setTranslator(null));
         translatorRepo.delete(translator);
+        cacheManager.invalidate(Translator.class, Order.class);
     }
 
     private Translator getTranslatorOrThrow(Integer id) {

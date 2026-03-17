@@ -1,6 +1,7 @@
 package com.qritiooo.translationagency.service.impl;
 
-import com.qritiooo.translationagency.config.CacheNames;
+import com.qritiooo.translationagency.cache.CacheKey;
+import com.qritiooo.translationagency.cache.CacheManager;
 import com.qritiooo.translationagency.dto.response.LanguageResponse;
 import com.qritiooo.translationagency.exception.NotFoundException;
 import com.qritiooo.translationagency.mapper.LanguageMapper;
@@ -10,16 +11,14 @@ import com.qritiooo.translationagency.service.LanguageService;
 import java.util.List;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-@CacheConfig(cacheNames = CacheNames.LANGUAGES_ALL)
 public class LanguageServiceImpl implements LanguageService {
 
     private final LanguageRepository languageRepository;
+    private final CacheManager cacheManager;
 
     @Override
     public LanguageResponse getByCode(String code) {
@@ -31,9 +30,12 @@ public class LanguageServiceImpl implements LanguageService {
     }
 
     @Override
-    @Cacheable(sync = true)
     public List<LanguageResponse> getAll() {
-        return languageRepository.findAll().stream().map(LanguageMapper::toResponse).toList();
+        CacheKey key = new CacheKey(Language.class, "getAll");
+        return cacheManager.computeIfAbsent(
+                key,
+                () -> languageRepository.findAll().stream().map(LanguageMapper::toResponse).toList()
+        );
     }
 
     private String normalizeCode(String code) {

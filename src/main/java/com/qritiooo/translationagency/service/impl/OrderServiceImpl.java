@@ -1,6 +1,7 @@
 package com.qritiooo.translationagency.service.impl;
 
-import com.qritiooo.translationagency.config.CacheNames;
+import com.qritiooo.translationagency.cache.CacheKey;
+import com.qritiooo.translationagency.cache.CacheManager;
 import com.qritiooo.translationagency.dto.request.OrderRequest;
 import com.qritiooo.translationagency.dto.response.OrderResponse;
 import com.qritiooo.translationagency.exception.BadRequestException;
@@ -20,9 +21,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -37,15 +35,10 @@ public class OrderServiceImpl implements OrderService {
     private final TranslatorRepository translatorRepo;
     private final DocumentRepository documentRepo;
     private final LanguageRepository languageRepo;
+    private final CacheManager cacheManager;
 
     @Override
     @Transactional
-    @Caching(evict = {
-            @CacheEvict(cacheNames = CacheNames.ORDERS_ALL, allEntries = true),
-            @CacheEvict(cacheNames = CacheNames.ORDERS_BY_TITLE, allEntries = true),
-            @CacheEvict(cacheNames = CacheNames.ORDERS_SEARCH_JPQL, allEntries = true),
-            @CacheEvict(cacheNames = CacheNames.ORDERS_SEARCH_NATIVE, allEntries = true)
-    })
     public OrderResponse create(OrderRequest request) {
         Order o = new Order();
         OrderMapper.updateEntity(o, request);
@@ -73,37 +66,31 @@ public class OrderServiceImpl implements OrderService {
             );
             savedOrder = orderRepo.save(savedOrder);
         }
-        return saveWithDocumentsAndMap(savedOrder, request.getDocumentIds());
+        OrderResponse response = saveWithDocumentsAndMap(savedOrder, request.getDocumentIds());
+        cacheManager.invalidate(Order.class);
+        return response;
     }
 
     @Override
     @Transactional
-    @Caching(evict = {
-            @CacheEvict(cacheNames = CacheNames.ORDERS_ALL, allEntries = true),
-            @CacheEvict(cacheNames = CacheNames.ORDERS_BY_TITLE, allEntries = true),
-            @CacheEvict(cacheNames = CacheNames.ORDERS_SEARCH_JPQL, allEntries = true),
-            @CacheEvict(cacheNames = CacheNames.ORDERS_SEARCH_NATIVE, allEntries = true)
-    })
     public OrderResponse update(Integer id, OrderRequest request) {
         Order o = orderRepo.findById(id).orElseThrow();
         OrderMapper.updateEntity(o, request);
         applyRelations(o, request);
-        return saveWithDocumentsAndMap(o, request.getDocumentIds());
+        OrderResponse response = saveWithDocumentsAndMap(o, request.getDocumentIds());
+        cacheManager.invalidate(Order.class);
+        return response;
     }
 
     @Override
     @Transactional
-    @Caching(evict = {
-            @CacheEvict(cacheNames = CacheNames.ORDERS_ALL, allEntries = true),
-            @CacheEvict(cacheNames = CacheNames.ORDERS_BY_TITLE, allEntries = true),
-            @CacheEvict(cacheNames = CacheNames.ORDERS_SEARCH_JPQL, allEntries = true),
-            @CacheEvict(cacheNames = CacheNames.ORDERS_SEARCH_NATIVE, allEntries = true)
-    })
     public OrderResponse patch(Integer id, OrderRequest request) {
         Order o = orderRepo.findById(id).orElseThrow();
         OrderMapper.patchEntity(o, request);
         applyRelations(o, request);
-        return saveWithDocumentsAndMap(o, request.getDocumentIds());
+        OrderResponse response = saveWithDocumentsAndMap(o, request.getDocumentIds());
+        cacheManager.invalidate(Order.class);
+        return response;
     }
 
     @Override
@@ -112,51 +99,75 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @Cacheable(cacheNames = CacheNames.ORDERS_BY_TITLE, sync = true)
     public OrderResponse getByTitle(String title) {
-        List<Order> orders = orderRepo.findByTitle(title);
-        if (orders.isEmpty()) {
-            throw new NotFoundException("Order not found with title: " + title);
-        }
-        return OrderMapper.toResponse(orders.getFirst());
+        CacheKey key = new CacheKey(Order.class, "getByTitle", title);
+        return cacheManager.computeIfAbsent(key, () -> {
+            List<Order> orders = orderRepo.findByTitle(title);
+            if (orders.isEmpty()) {
+                throw new NotFoundException("Order not found with title: " + title);
+            }
+            return OrderMapper.toResponse(orders.getFirst());
+        });
     }
 
     @Override
-    @Cacheable(cacheNames = CacheNames.ORDERS_ALL, sync = true)
     public List<OrderResponse> getAll(OrderStatus status, Integer clientId, Integer translatorId) {
-        return findByFilters(status, clientId, translatorId).stream()
-                .sorted(Comparator.comparing(Order::getId))
-                .map(OrderMapper::toResponse)
-                .toList();
+        CacheKey key = new CacheKey(Order.class, "getAll", status, clientId, translatorId);
+        return cacheManager.computeIfAbsent(key, () ->
+                findByFilters(status, clientId, translatorId).stream()
+                        .sorted(Comparator.comparing(Order::getId))
+                        .map(OrderMapper::toResponse)
+                        .toList()
+        );
     }
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(cacheNames = CacheNames.ORDERS_SEARCH_JPQL, sync = true)
     public Page<OrderResponse> searchByNestedJpql(
             OrderStatus status,
             String languageCode,
             Pageable pageable
     ) {
-        Language language = parseLanguage(languageCode);
-        return orderRepo.searchByNestedJpql(status, language, pageable)
-                .map(OrderMapper::toResponse);
+        CacheKey key = new CacheKey(
+                Order.class,
+                "searchByNestedJpql",
+                status,
+                languageCode,
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                pageable.getSort().toString()
+        );
+        return cacheManager.computeIfAbsent(key, () -> {
+            Language language = parseLanguage(languageCode);
+            return orderRepo.searchByNestedJpql(status, language, pageable)
+                    .map(OrderMapper::toResponse);
+        });
     }
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(cacheNames = CacheNames.ORDERS_SEARCH_NATIVE, sync = true)
     public Page<OrderResponse> searchByNestedNative(
             OrderStatus status,
             String languageCode,
             Pageable pageable
     ) {
-        Language language = parseLanguage(languageCode);
-        return orderRepo.searchByNestedNative(
-                status != null ? status.name() : null,
-                language != null ? language.getCode() : null,
-                pageable
-        ).map(OrderMapper::toResponse);
+        CacheKey key = new CacheKey(
+                Order.class,
+                "searchByNestedNative",
+                status,
+                languageCode,
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                pageable.getSort().toString()
+        );
+        return cacheManager.computeIfAbsent(key, () -> {
+            Language language = parseLanguage(languageCode);
+            return orderRepo.searchByNestedNative(
+                    status != null ? status.name() : null,
+                    language != null ? language.getCode() : null,
+                    pageable
+            ).map(OrderMapper::toResponse);
+        });
     }
 
     private void assignDocuments(Order order, List<Integer> documentIds) {
@@ -171,14 +182,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @Caching(evict = {
-            @CacheEvict(cacheNames = CacheNames.ORDERS_ALL, allEntries = true),
-            @CacheEvict(cacheNames = CacheNames.ORDERS_BY_TITLE, allEntries = true),
-            @CacheEvict(cacheNames = CacheNames.ORDERS_SEARCH_JPQL, allEntries = true),
-            @CacheEvict(cacheNames = CacheNames.ORDERS_SEARCH_NATIVE, allEntries = true)
-    })
     public void delete(Integer id) {
         orderRepo.deleteById(id);
+        cacheManager.invalidate(Order.class);
     }
 
     private void applyRelations(Order order, OrderRequest request) {
