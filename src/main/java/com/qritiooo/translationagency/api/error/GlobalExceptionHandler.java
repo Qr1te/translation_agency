@@ -20,6 +20,8 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final String VALIDATION_FAILED_MESSAGE = "Validation failed";
+
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleNotFound(
             NotFoundException ex,
@@ -45,7 +47,7 @@ public class GlobalExceptionHandler {
                 .toList();
         return buildError(
                 HttpStatus.BAD_REQUEST,
-                "Validation failed",
+                VALIDATION_FAILED_MESSAGE,
                 request,
                 validationErrors
         );
@@ -58,7 +60,7 @@ public class GlobalExceptionHandler {
     ) {
         return buildError(
                 HttpStatus.BAD_REQUEST,
-                "Validation failed",
+                VALIDATION_FAILED_MESSAGE,
                 request,
                 List.of()
         );
@@ -78,7 +80,7 @@ public class GlobalExceptionHandler {
                 .toList();
         return buildError(
                 HttpStatus.BAD_REQUEST,
-                "Validation failed",
+                VALIDATION_FAILED_MESSAGE,
                 request,
                 validationErrors
         );

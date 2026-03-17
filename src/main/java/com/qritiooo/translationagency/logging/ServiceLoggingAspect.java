@@ -23,11 +23,13 @@ public class ServiceLoggingAspect {
                 + "."
                 + signature.getName();
 
-        log.debug(
-                "Execution of method: {} with arguments: {}",
-                methodName,
-                Arrays.toString(joinPoint.getArgs())
-        );
+        if (log.isDebugEnabled()) {
+            log.debug(
+                    "Execution of method: {} with arguments: {}",
+                    methodName,
+                    Arrays.toString(joinPoint.getArgs())
+            );
+        }
 
         try {
             Object result = joinPoint.proceed();
@@ -37,14 +39,14 @@ public class ServiceLoggingAspect {
                     System.currentTimeMillis() - start
             );
             return result;
-        } catch (Throwable throwable) {
+        } catch (Exception exception) {
             log.error(
                     "Method {} failed in {} ms",
                     methodName,
                     System.currentTimeMillis() - start,
-                    throwable
+                    exception
             );
-            throw throwable;
+            throw exception;
         }
     }
 }
