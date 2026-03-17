@@ -1,6 +1,5 @@
 package com.qritiooo.translationagency.controller;
 
-import com.qritiooo.translationagency.dto.request.OrderPatchRequest;
 import com.qritiooo.translationagency.dto.request.OrderRequest;
 import com.qritiooo.translationagency.dto.response.OrderResponse;
 import com.qritiooo.translationagency.model.OrderStatus;
@@ -139,7 +138,7 @@ public class OrderController {
     })
     public ResponseEntity<OrderResponse> patch(
             @Positive @PathVariable Integer id,
-            @Valid @RequestBody OrderPatchRequest request
+            @Valid @RequestBody OrderRequest request
     ) {
         return ResponseEntity.ok(orderService.patch(id, request));
     }

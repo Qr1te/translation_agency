@@ -16,7 +16,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Order create/update request")
+@Schema(description = "Order request")
 public class OrderRequest {
     @NotBlank(message = "title is required")
     @Size(max = 255, message = "title must be at most 255 characters")

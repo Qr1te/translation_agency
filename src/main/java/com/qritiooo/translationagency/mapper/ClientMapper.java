@@ -1,6 +1,5 @@
 package com.qritiooo.translationagency.mapper;
 
-import com.qritiooo.translationagency.dto.request.ClientPatchRequest;
 import com.qritiooo.translationagency.dto.request.ClientRequest;
 import com.qritiooo.translationagency.dto.response.ClientResponse;
 import com.qritiooo.translationagency.model.Client;
@@ -19,7 +18,7 @@ public class ClientMapper {
         c.setEmail(request.getEmail());
     }
 
-    public static void patchEntity(Client c, ClientPatchRequest request) {
+    public static void patchEntity(Client c, ClientRequest request) {
         if (request.getFirstName() != null) {
             c.setFirstName(request.getFirstName());
         }

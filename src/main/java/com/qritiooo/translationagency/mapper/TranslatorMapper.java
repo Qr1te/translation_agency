@@ -1,6 +1,5 @@
 package com.qritiooo.translationagency.mapper;
 
-import com.qritiooo.translationagency.dto.request.TranslatorPatchRequest;
 import com.qritiooo.translationagency.dto.request.TranslatorRequest;
 import com.qritiooo.translationagency.dto.response.TranslatorLanguageResponse;
 import com.qritiooo.translationagency.dto.response.TranslatorResponse;
@@ -34,7 +33,7 @@ public class TranslatorMapper {
         translator.setRatePerPage(request.getRatePerPage());
     }
 
-    public static void patchEntity(Translator translator, TranslatorPatchRequest request) {
+    public static void patchEntity(Translator translator, TranslatorRequest request) {
         if (request.getFirstName() != null) {
             translator.setFirstName(request.getFirstName());
         }

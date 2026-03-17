@@ -1,6 +1,5 @@
 package com.qritiooo.translationagency.controller;
 
-import com.qritiooo.translationagency.dto.request.TranslatorPatchRequest;
 import com.qritiooo.translationagency.dto.request.TranslatorRequest;
 import com.qritiooo.translationagency.dto.response.TranslatorResponse;
 import com.qritiooo.translationagency.service.TranslatorService;
@@ -68,7 +67,7 @@ public class TranslatorController {
     })
     public ResponseEntity<TranslatorResponse> patch(
             @Positive @PathVariable Integer id,
-            @Valid @RequestBody TranslatorPatchRequest request
+            @Valid @RequestBody TranslatorRequest request
     ) {
         return ResponseEntity.ok(service.patch(id, request));
     }

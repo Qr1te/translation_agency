@@ -3,7 +3,6 @@ package com.qritiooo.translationagency.service.impl;
 import com.qritiooo.translationagency.cache.CacheKey;
 import com.qritiooo.translationagency.cache.CacheManager;
 import com.qritiooo.translationagency.dto.request.TranslatorLanguageRequest;
-import com.qritiooo.translationagency.dto.request.TranslatorPatchRequest;
 import com.qritiooo.translationagency.dto.request.TranslatorRequest;
 import com.qritiooo.translationagency.dto.response.TranslatorResponse;
 import com.qritiooo.translationagency.exception.BadRequestException;
@@ -57,7 +56,7 @@ public class TranslatorServiceImpl implements TranslatorService {
 
     @Override
     @Transactional
-    public TranslatorResponse patch(Integer id, TranslatorPatchRequest request) {
+    public TranslatorResponse patch(Integer id, TranslatorRequest request) {
         Translator translator = getTranslatorOrThrow(id);
         TranslatorMapper.patchEntity(translator, request);
         if (request.getLanguages() != null) {

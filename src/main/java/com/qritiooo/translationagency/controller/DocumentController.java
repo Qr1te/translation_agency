@@ -1,6 +1,5 @@
 package com.qritiooo.translationagency.controller;
 
-import com.qritiooo.translationagency.dto.request.DocumentPatchRequest;
 import com.qritiooo.translationagency.dto.request.DocumentRequest;
 import com.qritiooo.translationagency.dto.response.DocumentResponse;
 import com.qritiooo.translationagency.service.DocumentService;
@@ -69,7 +68,7 @@ public class DocumentController {
     })
     public ResponseEntity<DocumentResponse> patch(
             @Positive @PathVariable Integer id,
-            @Valid @RequestBody DocumentPatchRequest request
+            @Valid @RequestBody DocumentRequest request
     ) {
         return ResponseEntity.ok(service.patch(id, request));
     }
