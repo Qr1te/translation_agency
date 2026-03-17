@@ -2,6 +2,7 @@ package com.qritiooo.translationagency.service.impl;
 
 import com.qritiooo.translationagency.cache.CacheKey;
 import com.qritiooo.translationagency.cache.CacheManager;
+import com.qritiooo.translationagency.dto.request.ClientPatchRequest;
 import com.qritiooo.translationagency.dto.request.ClientRequest;
 import com.qritiooo.translationagency.dto.response.ClientResponse;
 import com.qritiooo.translationagency.exception.NotFoundException;
@@ -39,7 +40,7 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public ClientResponse patch(Integer id, ClientRequest request) {
+    public ClientResponse patch(Integer id, ClientPatchRequest request) {
         Client c = getClientOrThrow(id);
         ClientMapper.patchEntity(c, request);
         return saveAndMap(c);

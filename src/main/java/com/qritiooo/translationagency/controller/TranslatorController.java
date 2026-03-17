@@ -1,8 +1,6 @@
 package com.qritiooo.translationagency.controller;
 
-import com.qritiooo.translationagency.api.validation.OnCreate;
-import com.qritiooo.translationagency.api.validation.OnPatch;
-import com.qritiooo.translationagency.api.validation.OnUpdate;
+import com.qritiooo.translationagency.dto.request.TranslatorPatchRequest;
 import com.qritiooo.translationagency.dto.request.TranslatorRequest;
 import com.qritiooo.translationagency.dto.response.TranslatorResponse;
 import com.qritiooo.translationagency.service.TranslatorService;
@@ -10,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +40,7 @@ public class TranslatorController {
             @ApiResponse(responseCode = "400", description = "Invalid request")
     })
     public ResponseEntity<TranslatorResponse> create(
-            @Validated(OnCreate.class) @RequestBody TranslatorRequest request
+            @Valid @RequestBody TranslatorRequest request
     ) {
         return ResponseEntity.ok(service.create(request));
     }
@@ -55,7 +54,7 @@ public class TranslatorController {
     })
     public ResponseEntity<TranslatorResponse> update(
             @Positive @PathVariable Integer id,
-            @Validated(OnUpdate.class) @RequestBody TranslatorRequest request
+            @Valid @RequestBody TranslatorRequest request
     ) {
         return ResponseEntity.ok(service.update(id, request));
     }
@@ -69,7 +68,7 @@ public class TranslatorController {
     })
     public ResponseEntity<TranslatorResponse> patch(
             @Positive @PathVariable Integer id,
-            @Validated(OnPatch.class) @RequestBody TranslatorRequest request
+            @Valid @RequestBody TranslatorPatchRequest request
     ) {
         return ResponseEntity.ok(service.patch(id, request));
     }

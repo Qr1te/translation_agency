@@ -2,6 +2,7 @@ package com.qritiooo.translationagency.service.impl;
 
 import com.qritiooo.translationagency.cache.CacheKey;
 import com.qritiooo.translationagency.cache.CacheManager;
+import com.qritiooo.translationagency.dto.request.OrderPatchRequest;
 import com.qritiooo.translationagency.dto.request.OrderRequest;
 import com.qritiooo.translationagency.dto.response.OrderResponse;
 import com.qritiooo.translationagency.exception.BadRequestException;
@@ -84,7 +85,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderResponse patch(Integer id, OrderRequest request) {
+    public OrderResponse patch(Integer id, OrderPatchRequest request) {
         Order o = orderRepo.findById(id).orElseThrow();
         OrderMapper.patchEntity(o, request);
         applyRelations(o, request);
@@ -188,6 +189,25 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void applyRelations(Order order, OrderRequest request) {
+        if (request.getClientId() != null) {
+            order.setClient(clientRepo.findById(request.getClientId()).orElseThrow());
+        }
+        if (request.getTranslatorId() != null) {
+            order.setTranslator(translatorRepo.findById(request.getTranslatorId()).orElseThrow());
+        }
+        if (request.getSourceLanguageId() != null) {
+            order.setSourceLanguage(
+                    languageRepo.findById(request.getSourceLanguageId()).orElseThrow()
+            );
+        }
+        if (request.getTargetLanguageId() != null) {
+            order.setTargetLanguage(
+                    languageRepo.findById(request.getTargetLanguageId()).orElseThrow()
+            );
+        }
+    }
+
+    private void applyRelations(Order order, OrderPatchRequest request) {
         if (request.getClientId() != null) {
             order.setClient(clientRepo.findById(request.getClientId()).orElseThrow());
         }

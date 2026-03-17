@@ -1,8 +1,6 @@
 package com.qritiooo.translationagency.controller;
 
-import com.qritiooo.translationagency.api.validation.OnCreate;
-import com.qritiooo.translationagency.api.validation.OnPatch;
-import com.qritiooo.translationagency.api.validation.OnUpdate;
+import com.qritiooo.translationagency.dto.request.OrderPatchRequest;
 import com.qritiooo.translationagency.dto.request.OrderRequest;
 import com.qritiooo.translationagency.dto.response.OrderResponse;
 import com.qritiooo.translationagency.model.OrderStatus;
@@ -11,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import java.util.LinkedHashMap;
@@ -49,7 +48,7 @@ public class OrderController {
             @ApiResponse(responseCode = "400", description = "Invalid request")
     })
     public ResponseEntity<OrderResponse> create(
-            @Validated(OnCreate.class) @RequestBody OrderRequest request
+            @Valid @RequestBody OrderRequest request
     ) {
         return ResponseEntity.ok(orderService.create(request));
     }
@@ -93,7 +92,11 @@ public class OrderController {
             @RequestParam(required = false) String languageCode,
             @PageableDefault(sort = "id") Pageable pageable
     ) {
-        Page<OrderResponse> result = orderService.searchByNestedJpql(status, languageCode, pageable);
+        final Page<OrderResponse> result = orderService.searchByNestedJpql(
+                status,
+                languageCode,
+                pageable
+        );
         return ResponseEntity.ok(toPageResponse(result));
     }
 
@@ -105,7 +108,11 @@ public class OrderController {
             @RequestParam(required = false) String languageCode,
             @PageableDefault(sort = "id") Pageable pageable
     ) {
-        Page<OrderResponse> result = orderService.searchByNestedNative(status, languageCode, pageable);
+        final Page<OrderResponse> result = orderService.searchByNestedNative(
+                status,
+                languageCode,
+                pageable
+        );
         return ResponseEntity.ok(toPageResponse(result));
     }
 
@@ -118,7 +125,7 @@ public class OrderController {
     })
     public ResponseEntity<OrderResponse> update(
             @Positive @PathVariable Integer id,
-            @Validated(OnUpdate.class) @RequestBody OrderRequest request
+            @Valid @RequestBody OrderRequest request
     ) {
         return ResponseEntity.ok(orderService.update(id, request));
     }
@@ -132,7 +139,7 @@ public class OrderController {
     })
     public ResponseEntity<OrderResponse> patch(
             @Positive @PathVariable Integer id,
-            @Validated(OnPatch.class) @RequestBody OrderRequest request
+            @Valid @RequestBody OrderPatchRequest request
     ) {
         return ResponseEntity.ok(orderService.patch(id, request));
     }
@@ -149,14 +156,12 @@ public class OrderController {
     }
 
     private Map<String, Object> toPageResponse(Page<OrderResponse> page) {
-        Map<String, Object> response = new LinkedHashMap<>();
         Map<String, Object> pageMeta = new LinkedHashMap<>();
-
         pageMeta.put("size", page.getSize());
         pageMeta.put("number", page.getNumber());
         pageMeta.put("totalElements", page.getTotalElements());
         pageMeta.put("totalPages", page.getTotalPages());
-
+        Map<String, Object> response = new LinkedHashMap<>();
         response.put("content", page.getContent());
         response.put("page", pageMeta);
         return response;

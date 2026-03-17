@@ -1,5 +1,6 @@
 package com.qritiooo.translationagency.mapper;
 
+import com.qritiooo.translationagency.dto.request.DocumentPatchRequest;
 import com.qritiooo.translationagency.dto.request.DocumentRequest;
 import com.qritiooo.translationagency.dto.response.DocumentResponse;
 import com.qritiooo.translationagency.model.Document;
@@ -18,7 +19,7 @@ public class DocumentMapper {
         d.setPages(request.getPages());
     }
 
-    public static void patchEntity(Document d, DocumentRequest request) {
+    public static void patchEntity(Document d, DocumentPatchRequest request) {
         if (request.getType() != null) {
             d.setType(request.getType());
         }

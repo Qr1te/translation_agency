@@ -1,8 +1,6 @@
 package com.qritiooo.translationagency.controller;
 
-import com.qritiooo.translationagency.api.validation.OnCreate;
-import com.qritiooo.translationagency.api.validation.OnPatch;
-import com.qritiooo.translationagency.api.validation.OnUpdate;
+import com.qritiooo.translationagency.dto.request.ClientPatchRequest;
 import com.qritiooo.translationagency.dto.request.ClientRequest;
 import com.qritiooo.translationagency.dto.response.ClientResponse;
 import com.qritiooo.translationagency.service.ClientService;
@@ -10,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +40,7 @@ public class ClientController {
             @ApiResponse(responseCode = "400", description = "Invalid request")
     })
     public ResponseEntity<ClientResponse> create(
-            @Validated(OnCreate.class) @RequestBody ClientRequest request
+            @Valid @RequestBody ClientRequest request
     ) {
         return ResponseEntity.ok(service.create(request));
     }
@@ -55,7 +54,7 @@ public class ClientController {
     })
     public ResponseEntity<ClientResponse> update(
             @Positive @PathVariable Integer id,
-            @Validated(OnUpdate.class) @RequestBody ClientRequest request
+            @Valid @RequestBody ClientRequest request
     ) {
         return ResponseEntity.ok(service.update(id, request));
     }
@@ -69,7 +68,7 @@ public class ClientController {
     })
     public ResponseEntity<ClientResponse> patch(
             @Positive @PathVariable Integer id,
-            @Validated(OnPatch.class) @RequestBody ClientRequest request
+            @Valid @RequestBody ClientPatchRequest request
     ) {
         return ResponseEntity.ok(service.patch(id, request));
     }

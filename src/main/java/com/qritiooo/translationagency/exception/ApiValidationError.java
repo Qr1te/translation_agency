@@ -1,4 +1,4 @@
-package com.qritiooo.translationagency.api.error;
+package com.qritiooo.translationagency.exception;
 
 public record ApiValidationError(
         String field,

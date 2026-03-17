@@ -2,6 +2,7 @@ package com.qritiooo.translationagency.service.impl;
 
 import com.qritiooo.translationagency.cache.CacheKey;
 import com.qritiooo.translationagency.cache.CacheManager;
+import com.qritiooo.translationagency.dto.request.DocumentPatchRequest;
 import com.qritiooo.translationagency.dto.request.DocumentRequest;
 import com.qritiooo.translationagency.dto.response.DocumentResponse;
 import com.qritiooo.translationagency.mapper.DocumentMapper;
@@ -57,7 +58,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     @Transactional
-    public DocumentResponse patch(Integer id, DocumentRequest request) {
+    public DocumentResponse patch(Integer id, DocumentPatchRequest request) {
         Document d = docRepo.findById(id).orElseThrow();
         DocumentMapper.patchEntity(d, request);
 

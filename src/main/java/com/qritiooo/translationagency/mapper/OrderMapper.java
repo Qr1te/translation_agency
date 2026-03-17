@@ -1,5 +1,6 @@
 package com.qritiooo.translationagency.mapper;
 
+import com.qritiooo.translationagency.dto.request.OrderPatchRequest;
 import com.qritiooo.translationagency.dto.request.OrderRequest;
 import com.qritiooo.translationagency.dto.response.OrderResponse;
 import com.qritiooo.translationagency.model.Document;
@@ -36,7 +37,7 @@ public class OrderMapper {
         o.setStatus(request.getStatus());
     }
 
-    public static void patchEntity(Order o, OrderRequest request) {
+    public static void patchEntity(Order o, OrderPatchRequest request) {
         if (request.getTitle() != null) {
             o.setTitle(request.getTitle());
         }

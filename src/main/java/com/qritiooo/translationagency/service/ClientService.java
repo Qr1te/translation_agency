@@ -1,5 +1,6 @@
 package com.qritiooo.translationagency.service;
 
+import com.qritiooo.translationagency.dto.request.ClientPatchRequest;
 import com.qritiooo.translationagency.dto.request.ClientRequest;
 import com.qritiooo.translationagency.dto.response.ClientResponse;
 import java.util.List;
@@ -9,7 +10,7 @@ public interface ClientService {
 
     ClientResponse update(Integer id, ClientRequest request);
 
-    ClientResponse patch(Integer id, ClientRequest request);
+    ClientResponse patch(Integer id, ClientPatchRequest request);
 
     ClientResponse getById(Integer id);
 

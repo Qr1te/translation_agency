@@ -1,5 +1,6 @@
 package com.qritiooo.translationagency.service;
 
+import com.qritiooo.translationagency.dto.request.DocumentPatchRequest;
 import com.qritiooo.translationagency.dto.request.DocumentRequest;
 import com.qritiooo.translationagency.dto.response.DocumentResponse;
 import java.util.List;
@@ -9,7 +10,7 @@ public interface DocumentService {
 
     DocumentResponse update(Integer id, DocumentRequest request);
 
-    DocumentResponse patch(Integer id, DocumentRequest request);
+    DocumentResponse patch(Integer id, DocumentPatchRequest request);
 
     DocumentResponse getById(Integer id);
 

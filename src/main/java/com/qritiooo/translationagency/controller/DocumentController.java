@@ -1,8 +1,6 @@
 package com.qritiooo.translationagency.controller;
 
-import com.qritiooo.translationagency.api.validation.OnCreate;
-import com.qritiooo.translationagency.api.validation.OnPatch;
-import com.qritiooo.translationagency.api.validation.OnUpdate;
+import com.qritiooo.translationagency.dto.request.DocumentPatchRequest;
 import com.qritiooo.translationagency.dto.request.DocumentRequest;
 import com.qritiooo.translationagency.dto.response.DocumentResponse;
 import com.qritiooo.translationagency.service.DocumentService;
@@ -10,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +41,7 @@ public class DocumentController {
             @ApiResponse(responseCode = "400", description = "Invalid request")
     })
     public ResponseEntity<DocumentResponse> create(
-            @Validated(OnCreate.class) @RequestBody DocumentRequest request
+            @Valid @RequestBody DocumentRequest request
     ) {
         return ResponseEntity.ok(service.create(request));
     }
@@ -56,7 +55,7 @@ public class DocumentController {
     })
     public ResponseEntity<DocumentResponse> update(
             @Positive @PathVariable Integer id,
-            @Validated(OnUpdate.class) @RequestBody DocumentRequest request
+            @Valid @RequestBody DocumentRequest request
     ) {
         return ResponseEntity.ok(service.update(id, request));
     }
@@ -70,7 +69,7 @@ public class DocumentController {
     })
     public ResponseEntity<DocumentResponse> patch(
             @Positive @PathVariable Integer id,
-            @Validated(OnPatch.class) @RequestBody DocumentRequest request
+            @Valid @RequestBody DocumentPatchRequest request
     ) {
         return ResponseEntity.ok(service.patch(id, request));
     }

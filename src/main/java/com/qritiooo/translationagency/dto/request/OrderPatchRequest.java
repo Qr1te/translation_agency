@@ -2,8 +2,6 @@ package com.qritiooo.translationagency.dto.request;
 
 import com.qritiooo.translationagency.model.OrderStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import java.util.List;
@@ -16,14 +14,12 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Order create/update request")
-public class OrderRequest {
-    @NotBlank(message = "title is required")
+@Schema(description = "Order patch request")
+public class OrderPatchRequest {
     @Size(max = 255, message = "title must be at most 255 characters")
     @Schema(description = "Order title", example = "Translate contract")
     private String title;
 
-    @NotNull(message = "status is required")
     @Schema(description = "Current order status")
     private OrderStatus status;
 
@@ -46,4 +42,3 @@ public class OrderRequest {
     @Schema(description = "Attached document ids")
     private List<@Positive(message = "documentId must be greater than zero") Integer> documentIds;
 }
-

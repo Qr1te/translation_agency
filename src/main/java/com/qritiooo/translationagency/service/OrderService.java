@@ -1,5 +1,6 @@
 package com.qritiooo.translationagency.service;
 
+import com.qritiooo.translationagency.dto.request.OrderPatchRequest;
 import com.qritiooo.translationagency.dto.request.OrderRequest;
 import com.qritiooo.translationagency.dto.response.OrderResponse;
 import com.qritiooo.translationagency.model.OrderStatus;
@@ -12,7 +13,7 @@ public interface OrderService {
 
     OrderResponse update(Integer id, OrderRequest request);
 
-    OrderResponse patch(Integer id, OrderRequest request);
+    OrderResponse patch(Integer id, OrderPatchRequest request);
 
     OrderResponse getById(Integer id);
 

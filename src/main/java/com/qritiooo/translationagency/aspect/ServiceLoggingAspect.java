@@ -1,4 +1,4 @@
-package com.qritiooo.translationagency.logging;
+package com.qritiooo.translationagency.aspect;
 
 import java.util.Arrays;
 import org.aspectj.lang.ProceedingJoinPoint;
