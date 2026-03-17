@@ -13,7 +13,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,7 +42,7 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    @PostMapping("/create")
+    @PostMapping({"", "/create"})
     @Operation(summary = "Create order")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Order created"),
@@ -86,28 +88,28 @@ public class OrderController {
     @GetMapping("/search/jpql")
     @Operation(summary = "Complex search with JPQL and pagination")
     @ApiResponse(responseCode = "200", description = "Orders returned")
-    public ResponseEntity<Page<OrderResponse>> searchJpql(
+    public ResponseEntity<Map<String, Object>> searchJpql(
             @RequestParam(required = false) OrderStatus status,
             @RequestParam(required = false) String languageCode,
             @PageableDefault(sort = "id") Pageable pageable
     ) {
-        return ResponseEntity.ok(orderService.searchByNestedJpql(status, languageCode, pageable));
+        Page<OrderResponse> result = orderService.searchByNestedJpql(status, languageCode, pageable);
+        return ResponseEntity.ok(toPageResponse(result));
     }
 
     @GetMapping("/search/native")
     @Operation(summary = "Complex search with native query and pagination")
     @ApiResponse(responseCode = "200", description = "Orders returned")
-    public ResponseEntity<Page<OrderResponse>> searchNative(
+    public ResponseEntity<Map<String, Object>> searchNative(
             @RequestParam(required = false) OrderStatus status,
             @RequestParam(required = false) String languageCode,
             @PageableDefault(sort = "id") Pageable pageable
     ) {
-        return ResponseEntity.ok(
-                orderService.searchByNestedNative(status, languageCode, pageable)
-        );
+        Page<OrderResponse> result = orderService.searchByNestedNative(status, languageCode, pageable);
+        return ResponseEntity.ok(toPageResponse(result));
     }
 
-    @PutMapping("/update/{id}")
+    @PutMapping({"/{id}", "/update/{id}"})
     @Operation(summary = "Update order")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Order updated"),
@@ -121,7 +123,7 @@ public class OrderController {
         return ResponseEntity.ok(orderService.update(id, request));
     }
 
-    @PatchMapping("/patch/{id}")
+    @PatchMapping({"/{id}", "/patch/{id}"})
     @Operation(summary = "Patch order")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Order patched"),
@@ -135,7 +137,7 @@ public class OrderController {
         return ResponseEntity.ok(orderService.patch(id, request));
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping({"/{id}", "/delete/{id}"})
     @Operation(summary = "Delete order")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Order deleted"),
@@ -144,6 +146,20 @@ public class OrderController {
     public ResponseEntity<Void> delete(@Positive @PathVariable Integer id) {
         orderService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private Map<String, Object> toPageResponse(Page<OrderResponse> page) {
+        Map<String, Object> response = new LinkedHashMap<>();
+        Map<String, Object> pageMeta = new LinkedHashMap<>();
+
+        pageMeta.put("size", page.getSize());
+        pageMeta.put("number", page.getNumber());
+        pageMeta.put("totalElements", page.getTotalElements());
+        pageMeta.put("totalPages", page.getTotalPages());
+
+        response.put("content", page.getContent());
+        response.put("page", pageMeta);
+        return response;
     }
 }
 
