@@ -20,13 +20,13 @@ public interface OrderService {
 
     List<OrderResponse> getAll(OrderStatus status, Integer clientId, Integer translatorId);
 
-    Page<OrderResponse> searchByNestedJpql(
+    Page<OrderResponse> findByStatusAndTranslatorLanguageJpql(
             OrderStatus status,
             String languageCode,
             Pageable pageable
     );
 
-    Page<OrderResponse> searchByNestedNative(
+    Page<OrderResponse> findByStatusAndTranslatorLanguageNative(
             OrderStatus status,
             String languageCode,
             Pageable pageable

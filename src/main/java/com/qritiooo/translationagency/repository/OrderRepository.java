@@ -44,7 +44,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             where (:status is null or o.status = :status)
               and (:language is null or l = :language)
             """)
-    Page<Order> searchByNestedJpql(
+    Page<Order> findByStatusAndTranslatorLanguageJpql(
             @Param("status") OrderStatus status,
             @Param("language") Language language,
             Pageable pageable
@@ -71,7 +71,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
                     """,
             nativeQuery = true
     )
-    Page<Order> searchByNestedNative(
+    Page<Order> findByStatusAndTranslatorLanguageNative(
             @Param("status") String status,
             @Param("languageCode") String languageCode,
             Pageable pageable

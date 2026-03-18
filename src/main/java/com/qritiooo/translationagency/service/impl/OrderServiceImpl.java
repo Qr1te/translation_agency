@@ -123,14 +123,14 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<OrderResponse> searchByNestedJpql(
+    public Page<OrderResponse> findByStatusAndTranslatorLanguageJpql(
             OrderStatus status,
             String languageCode,
             Pageable pageable
     ) {
         CacheKey key = new CacheKey(
                 Order.class,
-                "searchByNestedJpql",
+                "findByStatusAndTranslatorLanguageJpql",
                 status,
                 languageCode,
                 pageable.getPageNumber(),
@@ -139,21 +139,21 @@ public class OrderServiceImpl implements OrderService {
         );
         return cacheManager.computeIfAbsent(key, () -> {
             Language language = parseLanguage(languageCode);
-            return orderRepo.searchByNestedJpql(status, language, pageable)
+            return orderRepo.findByStatusAndTranslatorLanguageJpql(status, language, pageable)
                     .map(OrderMapper::toResponse);
         });
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<OrderResponse> searchByNestedNative(
+    public Page<OrderResponse> findByStatusAndTranslatorLanguageNative(
             OrderStatus status,
             String languageCode,
             Pageable pageable
     ) {
         CacheKey key = new CacheKey(
                 Order.class,
-                "searchByNestedNative",
+                "findByStatusAndTranslatorLanguageNative",
                 status,
                 languageCode,
                 pageable.getPageNumber(),
@@ -162,7 +162,7 @@ public class OrderServiceImpl implements OrderService {
         );
         return cacheManager.computeIfAbsent(key, () -> {
             Language language = parseLanguage(languageCode);
-            return orderRepo.searchByNestedNative(
+            return orderRepo.findByStatusAndTranslatorLanguageNative(
                     status != null ? status.name() : null,
                     language != null ? language.getCode() : null,
                     pageable

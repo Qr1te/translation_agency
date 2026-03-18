@@ -89,7 +89,7 @@ public class OrderController {
             @RequestParam(required = false) String languageCode,
             @PageableDefault(sort = "id") Pageable pageable
     ) {
-        final Page<OrderResponse> result = orderService.searchByNestedJpql(
+        final Page<OrderResponse> result = orderService.findByStatusAndTranslatorLanguageJpql(
                 status,
                 languageCode,
                 pageable
@@ -105,7 +105,7 @@ public class OrderController {
             @RequestParam(required = false) String languageCode,
             @PageableDefault(sort = "id") Pageable pageable
     ) {
-        final Page<OrderResponse> result = orderService.searchByNestedNative(
+        final Page<OrderResponse> result = orderService.findByStatusAndTranslatorLanguageNative(
                 status,
                 languageCode,
                 pageable
