@@ -18,18 +18,21 @@ public interface OrderService {
 
     OrderResponse getByTitle(String title);
 
-    List<OrderResponse> getAll(OrderStatus status, Integer clientId, Integer translatorId);
-
-    Page<OrderResponse> findByStatusAndTranslatorLanguageJpql(
+    Page<OrderResponse> getAll(
             OrderStatus status,
-            String languageCode,
+            Integer clientId,
+            Integer translatorId,
             Pageable pageable
     );
 
-    Page<OrderResponse> findByStatusAndTranslatorLanguageNative(
+    List<OrderResponse> findByStatusAndTranslatorLanguageJpql(
             OrderStatus status,
-            String languageCode,
-            Pageable pageable
+            String languageCode
+    );
+
+    List<OrderResponse> findByStatusAndTranslatorLanguageNative(
+            OrderStatus status,
+            String languageCode
     );
 
     void delete(Integer id);

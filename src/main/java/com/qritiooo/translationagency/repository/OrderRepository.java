@@ -1,6 +1,5 @@
 package com.qritiooo.translationagency.repository;
 
-import com.qritiooo.translationagency.model.Language;
 import com.qritiooo.translationagency.model.Order;
 import com.qritiooo.translationagency.model.OrderStatus;
 import java.util.List;
@@ -34,46 +33,81 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     @EntityGraph(attributePaths = {"client", "translator", "documents"})
     List<Order> findByTitle(String title);
 
-    @EntityGraph(attributePaths = {"client", "translator", "documents"})
+    @EntityGraph(attributePaths = {
+            "client",
+            "translator",
+            "documents",
+            "sourceLanguage",
+            "targetLanguage"
+    })
+    @Query(
+            value = """
+                    select distinct o
+                    from Order o
+                    left join o.documents d
+                    where (:status is null or o.status = :status)
+                      and (:clientId is null or o.client.id = :clientId)
+                      and (:translatorId is null or o.translator.id = :translatorId)
+                    order by o.id
+                    """,
+            countQuery = """
+                    select count(o)
+                    from Order o
+                    where (:status is null or o.status = :status)
+                      and (:clientId is null or o.client.id = :clientId)
+                      and (:translatorId is null or o.translator.id = :translatorId)
+                    """
+    )
+    Page<Order> findAllByFilters(
+            @Param("status") OrderStatus status,
+            @Param("clientId") Integer clientId,
+            @Param("translatorId") Integer translatorId,
+            Pageable pageable
+    );
+
     @Query("""
-            select distinct o
+            select distinct o.id
             from Order o
             left join o.translator t
             left join t.translatorLanguages tl
             left join tl.language l
             where (:status is null or o.status = :status)
-              and (:language is null or l = :language)
+              and (:languageCode is null or upper(l.code) = upper(:languageCode))
+            order by o.id
             """)
-    Page<Order> findByStatusAndTranslatorLanguageJpql(
+    List<Integer> findIdsByStatusAndTranslatorLanguageJpql(
             @Param("status") OrderStatus status,
-            @Param("language") Language language,
-            Pageable pageable
+            @Param("languageCode") String languageCode
     );
 
     @Query(
             value = """
-                    select distinct o.*
+                    select distinct o.id
                     from orders o
                     left join translators t on t.id = o.translator_id
                     left join translator_languages tl on tl.translator_id = t.id
                     left join languages l on l.id = tl.language_id
                     where (:status is null or o.status = :status)
-                      and (:languageCode is null or l.code = :languageCode)
-                    """,
-            countQuery = """
-                    select count(distinct o.id)
-                    from orders o
-                    left join translators t on t.id = o.translator_id
-                    left join translator_languages tl on tl.translator_id = t.id
-                    left join languages l on l.id = tl.language_id
-                    where (:status is null or o.status = :status)
-                      and (:languageCode is null or l.code = :languageCode)
+                      and (:languageCode is null or upper(l.code) = upper(:languageCode))
+                    order by o.id
                     """,
             nativeQuery = true
     )
-    Page<Order> findByStatusAndTranslatorLanguageNative(
+    List<Integer> findIdsByStatusAndTranslatorLanguageNative(
             @Param("status") String status,
-            @Param("languageCode") String languageCode,
-            Pageable pageable
+            @Param("languageCode") String languageCode
     );
+
+    @Query("""
+            select distinct o
+            from Order o
+            left join fetch o.client c
+            left join fetch o.translator t
+            left join fetch o.documents d
+            left join fetch o.sourceLanguage sl
+            left join fetch o.targetLanguage tlg
+            where o.id in :ids
+            order by o.id
+            """)
+    List<Order> findAllWithDetailsByIdIn(@Param("ids") List<Integer> ids);
 }

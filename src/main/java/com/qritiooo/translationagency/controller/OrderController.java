@@ -73,44 +73,45 @@ public class OrderController {
     @GetMapping
     @Operation(summary = "Get orders by filters")
     @ApiResponse(responseCode = "200", description = "Orders returned")
-    public ResponseEntity<List<OrderResponse>> getAll(
+    public ResponseEntity<PagedOrderResponse> getAll(
             @RequestParam(required = false) OrderStatus status,
             @Positive @RequestParam(required = false) Integer clientId,
-            @Positive @RequestParam(required = false) Integer translatorId
+            @Positive @RequestParam(required = false) Integer translatorId,
+            @PageableDefault(sort = "id") Pageable pageable
     ) {
-        return ResponseEntity.ok(orderService.getAll(status, clientId, translatorId));
+        return ResponseEntity.ok(
+                toPageResponse(orderService.getAll(status, clientId, translatorId, pageable))
+        );
     }
 
     @GetMapping("/search/jpql")
-    @Operation(summary = "Complex search with JPQL and pagination")
+    @Operation(summary = "Complex search with JPQL")
     @ApiResponse(responseCode = "200", description = "Orders returned")
-    public ResponseEntity<PagedOrderResponse> searchJpql(
+    public ResponseEntity<List<OrderResponse>> searchJpql(
             @RequestParam(required = false) OrderStatus status,
-            @RequestParam(required = false) String languageCode,
-            @PageableDefault(sort = "id") Pageable pageable
+            @RequestParam(required = false) String languageCode
     ) {
-        final Page<OrderResponse> result = orderService.findByStatusAndTranslatorLanguageJpql(
-                status,
-                languageCode,
-                pageable
+        return ResponseEntity.ok(
+                orderService.findByStatusAndTranslatorLanguageJpql(
+                        status,
+                        languageCode
+                )
         );
-        return ResponseEntity.ok(toPageResponse(result));
     }
 
     @GetMapping("/search/native")
-    @Operation(summary = "Complex search with native query and pagination")
+    @Operation(summary = "Complex search with native query")
     @ApiResponse(responseCode = "200", description = "Orders returned")
-    public ResponseEntity<PagedOrderResponse> searchNative(
+    public ResponseEntity<List<OrderResponse>> searchNative(
             @RequestParam(required = false) OrderStatus status,
-            @RequestParam(required = false) String languageCode,
-            @PageableDefault(sort = "id") Pageable pageable
+            @RequestParam(required = false) String languageCode
     ) {
-        final Page<OrderResponse> result = orderService.findByStatusAndTranslatorLanguageNative(
-                status,
-                languageCode,
-                pageable
+        return ResponseEntity.ok(
+                orderService.findByStatusAndTranslatorLanguageNative(
+                        status,
+                        languageCode
+                )
         );
-        return ResponseEntity.ok(toPageResponse(result));
     }
 
     @PutMapping({"/{id}", "/update/{id}"})

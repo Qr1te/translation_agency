@@ -4,11 +4,9 @@ import com.qritiooo.translationagency.cache.CacheKey;
 import com.qritiooo.translationagency.cache.CacheManager;
 import com.qritiooo.translationagency.dto.request.OrderRequest;
 import com.qritiooo.translationagency.dto.response.OrderResponse;
-import com.qritiooo.translationagency.exception.BadRequestException;
 import com.qritiooo.translationagency.exception.NotFoundException;
 import com.qritiooo.translationagency.mapper.OrderMapper;
 import com.qritiooo.translationagency.model.Document;
-import com.qritiooo.translationagency.model.Language;
 import com.qritiooo.translationagency.model.Order;
 import com.qritiooo.translationagency.model.OrderStatus;
 import com.qritiooo.translationagency.repository.ClientRepository;
@@ -17,7 +15,6 @@ import com.qritiooo.translationagency.repository.LanguageRepository;
 import com.qritiooo.translationagency.repository.OrderRepository;
 import com.qritiooo.translationagency.repository.TranslatorRepository;
 import com.qritiooo.translationagency.service.OrderService;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
@@ -111,62 +108,82 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<OrderResponse> getAll(OrderStatus status, Integer clientId, Integer translatorId) {
-        CacheKey key = new CacheKey(Order.class, "getAll", status, clientId, translatorId);
+    @Transactional(readOnly = true)
+    public Page<OrderResponse> getAll(
+            OrderStatus status,
+            Integer clientId,
+            Integer translatorId,
+            Pageable pageable
+    ) {
+        CacheKey key = new CacheKey(
+                Order.class,
+                "getAll",
+                status,
+                clientId,
+                translatorId,
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                pageable.getSort().toString()
+        );
         return cacheManager.computeIfAbsent(key, () ->
-                findByFilters(status, clientId, translatorId).stream()
-                        .sorted(Comparator.comparing(Order::getId))
+                orderRepo.findAllByFilters(status, clientId, translatorId, pageable)
                         .map(OrderMapper::toResponse)
-                        .toList()
         );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<OrderResponse> findByStatusAndTranslatorLanguageJpql(
+    public List<OrderResponse> findByStatusAndTranslatorLanguageJpql(
             OrderStatus status,
-            String languageCode,
-            Pageable pageable
+            String languageCode
     ) {
         CacheKey key = new CacheKey(
                 Order.class,
                 "findByStatusAndTranslatorLanguageJpql",
                 status,
-                languageCode,
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
-                pageable.getSort().toString()
+                languageCode
         );
         return cacheManager.computeIfAbsent(key, () -> {
-            Language language = parseLanguage(languageCode);
-            return orderRepo.findByStatusAndTranslatorLanguageJpql(status, language, pageable)
-                    .map(OrderMapper::toResponse);
+            String normalizedLanguageCode = normalizeLanguageCodeOrNull(languageCode);
+            List<Integer> orderIds = orderRepo.findIdsByStatusAndTranslatorLanguageJpql(
+                    status,
+                    normalizedLanguageCode
+            );
+            if (orderIds.isEmpty()) {
+                return List.of();
+            }
+            return orderRepo.findAllWithDetailsByIdIn(orderIds)
+                    .stream()
+                    .map(OrderMapper::toResponse)
+                    .toList();
         });
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<OrderResponse> findByStatusAndTranslatorLanguageNative(
+    public List<OrderResponse> findByStatusAndTranslatorLanguageNative(
             OrderStatus status,
-            String languageCode,
-            Pageable pageable
+            String languageCode
     ) {
         CacheKey key = new CacheKey(
                 Order.class,
                 "findByStatusAndTranslatorLanguageNative",
                 status,
-                languageCode,
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
-                pageable.getSort().toString()
+                languageCode
         );
         return cacheManager.computeIfAbsent(key, () -> {
-            Language language = parseLanguage(languageCode);
-            return orderRepo.findByStatusAndTranslatorLanguageNative(
+            String normalizedLanguageCode = normalizeLanguageCodeOrNull(languageCode);
+            List<Integer> orderIds = orderRepo.findIdsByStatusAndTranslatorLanguageNative(
                     status != null ? status.name() : null,
-                    language != null ? language.getCode() : null,
-                    pageable
-            ).map(OrderMapper::toResponse);
+                    normalizedLanguageCode
+            );
+            if (orderIds.isEmpty()) {
+                return List.of();
+            }
+            return orderRepo.findAllWithDetailsByIdIn(orderIds)
+                    .stream()
+                    .map(OrderMapper::toResponse)
+                    .toList();
         });
     }
 
@@ -216,28 +233,11 @@ public class OrderServiceImpl implements OrderService {
         return OrderMapper.toResponse(savedOrder);
     }
 
-    private List<Order> findByFilters(OrderStatus status, Integer clientId, Integer translatorId) {
-        if (status != null) {
-            return orderRepo.findByStatus(status);
-        }
-        if (clientId != null) {
-            return orderRepo.findByClient_Id(clientId);
-        }
-        if (translatorId != null) {
-            return orderRepo.findByTranslator_Id(translatorId);
-        }
-        return orderRepo.findAll();
-    }
-
-    private Language parseLanguage(String languageCode) {
+    private String normalizeLanguageCodeOrNull(String languageCode) {
         if (languageCode == null || languageCode.isBlank()) {
             return null;
         }
-        String normalizedCode = normalizeLanguageCode(languageCode);
-        return languageRepo.findByCodeIgnoreCase(normalizedCode)
-                .orElseThrow(
-                        () -> new BadRequestException("Unknown language code: " + languageCode)
-                );
+        return normalizeLanguageCode(languageCode);
     }
 
     private String normalizeLanguageCode(String languageCode) {
