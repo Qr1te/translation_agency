@@ -22,6 +22,12 @@ public class RequestExceptionHandler extends AbstractExceptionHandler {
             HttpMessageNotReadableException ex,
             HttpServletRequest request
     ) {
+        logHandledException(
+                HttpStatus.BAD_REQUEST,
+                "Malformed request JSON or invalid enum/date value",
+                request,
+                ex
+        );
         return buildError(
                 HttpStatus.BAD_REQUEST,
                 "Malformed request JSON or invalid enum/date value",
@@ -35,6 +41,12 @@ public class RequestExceptionHandler extends AbstractExceptionHandler {
             MissingServletRequestParameterException ex,
             HttpServletRequest request
     ) {
+        logHandledException(
+                HttpStatus.BAD_REQUEST,
+                "Missing required request parameter: " + ex.getParameterName(),
+                request,
+                ex
+        );
         return buildError(
                 HttpStatus.BAD_REQUEST,
                 "Missing required request parameter: " + ex.getParameterName(),
@@ -48,6 +60,12 @@ public class RequestExceptionHandler extends AbstractExceptionHandler {
             MethodArgumentTypeMismatchException ex,
             HttpServletRequest request
     ) {
+        logHandledException(
+                HttpStatus.BAD_REQUEST,
+                "Invalid value for parameter: " + ex.getName(),
+                request,
+                ex
+        );
         return buildError(
                 HttpStatus.BAD_REQUEST,
                 "Invalid value for parameter: " + ex.getName(),

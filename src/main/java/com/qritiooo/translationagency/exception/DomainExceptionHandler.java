@@ -32,6 +32,7 @@ public class DomainExceptionHandler extends AbstractExceptionHandler {
             RuntimeException ex,
             HttpServletRequest request
     ) {
+        logHandledException(HttpStatus.BAD_REQUEST, ex.getMessage(), request, ex);
         return buildError(
                 HttpStatus.BAD_REQUEST,
                 ex.getMessage(),

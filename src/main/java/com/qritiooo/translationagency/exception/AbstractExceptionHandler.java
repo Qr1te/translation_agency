@@ -3,6 +3,8 @@ package com.qritiooo.translationagency.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -10,6 +12,7 @@ import org.springframework.validation.FieldError;
 public abstract class AbstractExceptionHandler {
 
     protected static final String VALIDATION_FAILED_MESSAGE = "Validation failed";
+    private static final Logger log = LoggerFactory.getLogger(AbstractExceptionHandler.class);
 
     protected ResponseEntity<ApiErrorResponse> buildError(
             HttpStatus status,
@@ -27,6 +30,24 @@ public abstract class AbstractExceptionHandler {
                         validationErrors
                 )
         );
+    }
+
+    protected void logHandledException(
+            HttpStatus status,
+            String message,
+            HttpServletRequest request,
+            Exception ex
+    ) {
+        if (status.is4xxClientError()) {
+            log.warn(
+                    "Handled {} for {} {}: {}",
+                    status.value(),
+                    request.getMethod(),
+                    request.getRequestURI(),
+                    message,
+                    ex
+            );
+        }
     }
 
     protected ApiValidationError toValidationError(FieldError error) {
