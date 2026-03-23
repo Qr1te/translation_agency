@@ -122,19 +122,22 @@ class ClientServiceImplTest {
     void createBulkTransactional_ShouldThrowConflict_WhenPayloadHasDuplicateEmails() {
         ClientRequest first = new ClientRequest("Anna", "Kovalenko", "anna@test.com");
         ClientRequest second = new ClientRequest("Ann", "K", "ANNA@test.com");
+        List<ClientRequest> requests = List.of(first, second);
 
         assertThrows(
                 ConflictException.class,
-                () -> clientService.createBulkTransactional(List.of(first, second))
+                () -> clientService.createBulkTransactional(requests)
         );
         verify(clientRepository, never()).save(any(Client.class));
     }
 
     @Test
     void createBulkTransactional_ShouldThrowBadRequest_WhenPayloadIsEmpty() {
+        List<ClientRequest> requests = List.of();
+
         assertThrows(
                 BadRequestException.class,
-                () -> clientService.createBulkTransactional(List.of())
+                () -> clientService.createBulkTransactional(requests)
         );
         verify(clientRepository, never()).save(any(Client.class));
     }
@@ -152,13 +155,14 @@ class ClientServiceImplTest {
     void createBulkNonTransactional_ShouldStopOnConflictAfterFirstSave() {
         ClientRequest first = new ClientRequest("Anna", "Kovalenko", "anna@test.com");
         ClientRequest second = new ClientRequest("Ivan", "Petrov", "ivan@test.com");
+        List<ClientRequest> requests = List.of(first, second);
 
         when(clientRepository.existsByEmailIgnoreCase(anyString())).thenReturn(false, true);
         when(clientRepository.save(any(Client.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         assertThrows(
                 ConflictException.class,
-                () -> clientService.createBulkNonTransactional(List.of(first, second))
+                () -> clientService.createBulkNonTransactional(requests)
         );
         verify(clientRepository, times(1)).save(any(Client.class));
     }
