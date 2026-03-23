@@ -72,6 +72,22 @@ class DocumentServiceImplTest {
         assertEquals(5, response.getPages());
     }
 
+
+    @Test
+    void update_ShouldBindOrder_WhenOrderIdPresent() {
+        DocumentRequest request = new DocumentRequest("Contract", 5, 8);
+        Document document = new Document(22, "Old", 1, null);
+        Order order = new Order();
+        order.setId(8);
+        when(documentRepository.findById(22)).thenReturn(Optional.of(document));
+        when(orderRepository.findById(8)).thenReturn(Optional.of(order));
+        when(documentRepository.save(document)).thenReturn(document);
+
+        DocumentResponse response = documentService.update(22, request);
+
+        assertEquals(8, response.getOrderId());
+        assertEquals(1, order.getDocuments().size());
+    }
     @Test
     void patch_ShouldChangeOnlyProvidedFields() {
         DocumentRequest request = new DocumentRequest(null, 9, null);
@@ -152,6 +168,91 @@ class DocumentServiceImplTest {
         verify(cacheManager).invalidate(Document.class, Order.class);
     }
 
+
+    @Test
+    void create_ShouldSaveWithoutOrder_WhenOrderIdIsNull() {
+        DocumentRequest request = new DocumentRequest("Passport", 10, null);
+        when(documentRepository.save(any(Document.class))).thenAnswer(invocation -> {
+            Document document = invocation.getArgument(0);
+            document.setId(21);
+            return document;
+        });
+
+        DocumentResponse response = documentService.create(request);
+
+        assertEquals(21, response.getId());
+        assertNull(response.getOrderId());
+    }
+
+    @Test
+    void patch_ShouldRebindDocument_WhenOrderChanges() {
+        Order oldOrder = new Order();
+        oldOrder.setId(1);
+        Order newOrder = new Order();
+        newOrder.setId(2);
+        Document document = new Document(30, "Invoice", 4, oldOrder);
+        oldOrder.getDocuments().add(document);
+        DocumentRequest request = new DocumentRequest(null, null, 2);
+
+        when(documentRepository.findById(30)).thenReturn(Optional.of(document));
+        when(orderRepository.findById(2)).thenReturn(Optional.of(newOrder));
+        when(documentRepository.save(document)).thenReturn(document);
+
+        DocumentResponse response = documentService.patch(30, request);
+
+        assertEquals(2, response.getOrderId());
+        assertEquals(0, oldOrder.getDocuments().size());
+        assertEquals(1, newOrder.getDocuments().size());
+    }
+
+    @Test
+    void patch_ShouldNotDuplicateDocument_WhenAlreadyBoundToSameOrder() {
+        Order order = new Order();
+        Document document = new Document(31, "Invoice", 4, order);
+        order.getDocuments().add(document);
+        DocumentRequest request = new DocumentRequest(null, null, 77);
+        order.setId(77);
+
+        when(documentRepository.findById(31)).thenReturn(Optional.of(document));
+        when(orderRepository.findById(77)).thenReturn(Optional.of(order));
+        when(documentRepository.save(document)).thenReturn(document);
+
+        DocumentResponse response = documentService.patch(31, request);
+
+        assertEquals(77, response.getOrderId());
+        assertEquals(1, order.getDocuments().size());
+        assertEquals(document, order.getDocuments().getFirst());
+    }
+
+    @Test
+    void patch_ShouldBindNewOrder_WhenOldOrderHasNullId() {
+        Order oldOrder = new Order();
+        Order newOrder = new Order();
+        newOrder.setId(88);
+        Document document = new Document(32, "Invoice", 4, oldOrder);
+        oldOrder.getDocuments().add(document);
+        DocumentRequest request = new DocumentRequest(null, null, 88);
+
+        when(documentRepository.findById(32)).thenReturn(Optional.of(document));
+        when(orderRepository.findById(88)).thenReturn(Optional.of(newOrder));
+        when(documentRepository.save(document)).thenReturn(document);
+
+        DocumentResponse response = documentService.patch(32, request);
+
+        assertEquals(88, response.getOrderId());
+        assertEquals(1, oldOrder.getDocuments().size());
+        assertEquals(1, newOrder.getDocuments().size());
+        assertEquals(document, newOrder.getDocuments().getFirst());
+    }    @Test
+    void delete_ShouldDelete_WhenDocumentHasNoOrder() {
+        Document document = new Document(16, "Receipt", 2, null);
+        when(documentRepository.findById(16)).thenReturn(Optional.of(document));
+
+        documentService.delete(16);
+
+        verify(documentRepository).delete(document);
+        verify(cacheManager).invalidate(Document.class, Order.class);
+    }
     @Test
     void create_ShouldThrow_WhenOrderMissing() {
         DocumentRequest request = new DocumentRequest("Passport", 10, 99);
@@ -160,3 +261,7 @@ class DocumentServiceImplTest {
         assertThrows(NoSuchElementException.class, () -> documentService.create(request));
     }
 }
+
+
+
+

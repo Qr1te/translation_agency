@@ -74,6 +74,17 @@ class ClientServiceImplTest {
         verify(clientRepository, never()).existsByEmailIgnoreCase(anyString());
     }
 
+
+    @Test
+    void create_ShouldSaveClient_WhenEmailIsBlank() {
+        ClientRequest request = new ClientRequest("Anna", "Kovalenko", "   ");
+        when(clientRepository.save(any(Client.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ClientResponse result = clientService.create(request);
+
+        assertEquals("   ", result.getEmail());
+        verify(clientRepository, never()).existsByEmailIgnoreCase(anyString());
+    }
     @Test
     void create_ShouldThrowConflict_WhenEmailAlreadyExists() {
         ClientRequest request = new ClientRequest("Anna", "Kovalenko", "anna@test.com");

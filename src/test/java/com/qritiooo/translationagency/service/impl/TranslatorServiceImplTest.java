@@ -113,6 +113,30 @@ class TranslatorServiceImplTest {
         verify(languageRepository, never()).findById(any());
     }
 
+
+    @Test
+    void patch_ShouldSyncLanguages_WhenLanguagesAreProvided() {
+        Translator translator = new Translator();
+        translator.setId(4);
+        translator.setFirstName("A");
+        translator.setLastName("B");
+        translator.setRatePerPage(new BigDecimal("10"));
+        Language language = new Language(2, "RU", "Russian");
+        TranslatorRequest request = new TranslatorRequest(
+                null,
+                null,
+                null,
+                List.of(new TranslatorLanguageRequest(2, LanguageProficiencyLevel.ADVANCED))
+        );
+        when(translatorRepository.findById(4)).thenReturn(Optional.of(translator));
+        when(languageRepository.findById(2)).thenReturn(Optional.of(language));
+        when(translatorRepository.save(translator)).thenReturn(translator);
+
+        TranslatorResponse response = translatorService.patch(4, request);
+
+        assertEquals(1, response.getLanguages().size());
+        assertEquals(2, response.getLanguages().getFirst().getLanguageId());
+    }
     @Test
     void create_ShouldThrowBadRequest_WhenDuplicateLanguageIds() {
         TranslatorRequest request = new TranslatorRequest(
@@ -167,6 +191,44 @@ class TranslatorServiceImplTest {
         assertEquals(8, response.getId());
     }
 
+
+    @Test
+    void update_ShouldClearLanguages_WhenLanguagesIsNull() {
+        Translator translator = new Translator();
+        translator.setId(9);
+        translator.setFirstName("A");
+        translator.setLastName("B");
+        translator.setRatePerPage(new BigDecimal("10"));
+        Language language = new Language(1, "EN", "English");
+        translator.getTranslatorLanguages().add(
+                new com.qritiooo.translationagency.model.TranslatorLanguage(
+                        null,
+                        translator,
+                        language,
+                        LanguageProficiencyLevel.NATIVE
+                )
+        );
+        TranslatorRequest request = new TranslatorRequest("C", "D", new BigDecimal("12"), null);
+        when(translatorRepository.findById(9)).thenReturn(Optional.of(translator));
+        when(translatorRepository.save(translator)).thenReturn(translator);
+
+        TranslatorResponse response = translatorService.update(9, request);
+
+        assertEquals(0, response.getLanguages().size());
+    }
+
+    @Test
+    void create_ShouldThrowNotFound_WhenLanguageMissing() {
+        TranslatorRequest request = new TranslatorRequest(
+                "Ivan",
+                "Petrov",
+                new BigDecimal("20.00"),
+                List.of(new TranslatorLanguageRequest(99, LanguageProficiencyLevel.ADVANCED))
+        );
+        when(languageRepository.findById(99)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> translatorService.create(request));
+    }
     @Test
     @SuppressWarnings("unchecked")
     void getAll_ShouldReturnFromCacheSupplier() {
@@ -203,4 +265,6 @@ class TranslatorServiceImplTest {
         verify(cacheManager).invalidate(Translator.class, Order.class);
     }
 }
+
+
 

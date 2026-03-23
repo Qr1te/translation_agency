@@ -53,8 +53,35 @@ class LanguageServiceImplTest {
         assertThrows(NotFoundException.class, () -> languageService.getByCode("xx"));
     }
 
+
     @Test
+    void getByCode_ShouldNormalizeAllSupportedAliases() {
+        when(languageRepository.findByCodeIgnoreCase(anyString()))
+                .thenAnswer(invocation -> {
+                    String code = invocation.getArgument(0);
+                    return Optional.of(new Language(1, code, code));
+                });
+
+        assertEquals("EN", languageService.getByCode("english").getCode());
+        assertEquals("RU", languageService.getByCode("russian").getCode());
+        assertEquals("DE", languageService.getByCode("german").getCode());
+        assertEquals("FR", languageService.getByCode("french").getCode());
+        assertEquals("IT", languageService.getByCode("italian").getCode());
+        assertEquals("SP", languageService.getByCode("spanish").getCode());
+        assertEquals("PL", languageService.getByCode("polish").getCode());
+        assertEquals("CN", languageService.getByCode("chinese").getCode());
+        assertEquals("BY", languageService.getByCode(" by ").getCode());
+    }
+
+    @Test
+    void getByCode_ShouldPassNullToRepository_WhenCodeIsNull() {
+        when(languageRepository.findByCodeIgnoreCase(null)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> languageService.getByCode(null));
+        verify(languageRepository).findByCodeIgnoreCase(null);
+    }
     @SuppressWarnings("unchecked")
+    @Test
     void getAll_ShouldReturnMappedLanguagesFromCacheSupplier() {
         Language first = new Language(1, "EN", "English");
         Language second = new Language(2, "RU", "Russian");
@@ -72,3 +99,4 @@ class LanguageServiceImplTest {
         verify(cacheManager).computeIfAbsent(any(CacheKey.class), any(Supplier.class));
     }
 }
+

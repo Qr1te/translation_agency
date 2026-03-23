@@ -270,6 +270,84 @@ class OrderServiceImplTest {
         verify(orderRepository).findAllWithDetailsByStatusAndTranslatorLanguage(OrderStatus.NEW, null);
     }
 
+
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void findByStatusAndTranslatorLanguageNative_ShouldPassNull_WhenLanguageIsNull() {
+        when(cacheManager.computeIfAbsent(any(CacheKey.class), any(Supplier.class)))
+                .thenAnswer(invocation -> {
+                    Supplier<List<OrderResponse>> supplier = invocation.getArgument(1);
+                    return supplier.get();
+                });
+        when(orderRepository.findAllWithDetailsByStatusAndTranslatorLanguage(OrderStatus.NEW, null))
+                .thenReturn(List.of());
+
+        List<OrderResponse> result = orderService.findByStatusAndTranslatorLanguageNative(
+                OrderStatus.NEW,
+                null
+        );
+
+        assertEquals(0, result.size());
+        verify(orderRepository).findAllWithDetailsByStatusAndTranslatorLanguage(OrderStatus.NEW, null);
+    }
+    @Test
+    @SuppressWarnings("unchecked")
+    void findByStatusAndTranslatorLanguageJpql_ShouldNormalizeAllSupportedAliases() {
+        when(cacheManager.computeIfAbsent(any(CacheKey.class), any(Supplier.class)))
+                .thenAnswer(invocation -> {
+                    Supplier<List<OrderResponse>> supplier = invocation.getArgument(1);
+                    return supplier.get();
+                });
+        when(orderRepository.findAllWithDetailsByStatusAndTranslatorLanguage(any(), any()))
+                .thenReturn(List.of());
+
+        orderService.findByStatusAndTranslatorLanguageJpql(OrderStatus.NEW, "english");
+        orderService.findByStatusAndTranslatorLanguageJpql(OrderStatus.NEW, "russian");
+        orderService.findByStatusAndTranslatorLanguageJpql(OrderStatus.NEW, "german");
+        orderService.findByStatusAndTranslatorLanguageJpql(OrderStatus.NEW, "french");
+        orderService.findByStatusAndTranslatorLanguageJpql(OrderStatus.NEW, "italian");
+        orderService.findByStatusAndTranslatorLanguageJpql(OrderStatus.NEW, "spanish");
+        orderService.findByStatusAndTranslatorLanguageJpql(OrderStatus.NEW, "polish");
+        orderService.findByStatusAndTranslatorLanguageJpql(OrderStatus.NEW, "chinese");
+        orderService.findByStatusAndTranslatorLanguageJpql(OrderStatus.NEW, "  by  ");
+
+        verify(orderRepository).findAllWithDetailsByStatusAndTranslatorLanguage(OrderStatus.NEW, "EN");
+        verify(orderRepository).findAllWithDetailsByStatusAndTranslatorLanguage(OrderStatus.NEW, "RU");
+        verify(orderRepository).findAllWithDetailsByStatusAndTranslatorLanguage(OrderStatus.NEW, "DE");
+        verify(orderRepository).findAllWithDetailsByStatusAndTranslatorLanguage(OrderStatus.NEW, "FR");
+        verify(orderRepository).findAllWithDetailsByStatusAndTranslatorLanguage(OrderStatus.NEW, "IT");
+        verify(orderRepository).findAllWithDetailsByStatusAndTranslatorLanguage(OrderStatus.NEW, "SP");
+        verify(orderRepository).findAllWithDetailsByStatusAndTranslatorLanguage(OrderStatus.NEW, "PL");
+        verify(orderRepository).findAllWithDetailsByStatusAndTranslatorLanguage(OrderStatus.NEW, "CN");
+        verify(orderRepository).findAllWithDetailsByStatusAndTranslatorLanguage(OrderStatus.NEW, "BY");
+    }
+
+    @Test
+    void create_ShouldWork_WhenOptionalRelationsAreMissing() {
+        OrderRequest request = new OrderRequest(
+                "Simple Order",
+                OrderStatus.NEW,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
+            Order order = invocation.getArgument(0);
+            if (order.getId() == null) {
+                order.setId(101);
+            }
+            return order;
+        });
+        when(documentRepository.findByOrder_Id(101)).thenReturn(List.of());
+
+        OrderResponse response = orderService.create(request);
+
+        assertEquals(101, response.getId());
+        assertEquals("Simple Order", response.getTitle());
+    }
     @Test
     void delete_ShouldDeleteByIdAndInvalidateCache() {
         orderService.delete(123);
@@ -278,3 +356,4 @@ class OrderServiceImplTest {
         verify(cacheManager).invalidate(Order.class);
     }
 }
+

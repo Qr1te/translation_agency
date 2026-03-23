@@ -73,9 +73,7 @@ public class DomainExceptionHandler extends AbstractExceptionHandler {
             DataIntegrityViolationException ex,
             HttpServletRequest request
     ) {
-        String message = ex.getMostSpecificCause() != null
-                ? ex.getMostSpecificCause().getMessage()
-                : ex.getMessage();
+        String message = ex.getMostSpecificCause().getMessage();
         logHandledException(HttpStatus.CONFLICT, message, request, ex);
         return buildError(
                 HttpStatus.CONFLICT,
@@ -85,3 +83,4 @@ public class DomainExceptionHandler extends AbstractExceptionHandler {
         );
     }
 }
+
