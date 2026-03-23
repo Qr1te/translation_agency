@@ -145,14 +145,10 @@ public class OrderServiceImpl implements OrderService {
         );
         return cacheManager.computeIfAbsent(key, () -> {
             String normalizedLanguageCode = normalizeLanguageCodeOrNull(languageCode);
-            List<Integer> orderIds = orderRepo.findIdsByStatusAndTranslatorLanguageJpql(
-                    status,
-                    normalizedLanguageCode
-            );
-            if (orderIds.isEmpty()) {
-                return List.of();
-            }
-            return orderRepo.findAllWithDetailsByIdIn(orderIds)
+            return orderRepo.findAllWithDetailsByStatusAndTranslatorLanguage(
+                            status,
+                            normalizedLanguageCode
+                    )
                     .stream()
                     .map(OrderMapper::toResponse)
                     .toList();
@@ -173,14 +169,10 @@ public class OrderServiceImpl implements OrderService {
         );
         return cacheManager.computeIfAbsent(key, () -> {
             String normalizedLanguageCode = normalizeLanguageCodeOrNull(languageCode);
-            List<Integer> orderIds = orderRepo.findIdsByStatusAndTranslatorLanguageNative(
-                    status != null ? status.name() : null,
-                    normalizedLanguageCode
-            );
-            if (orderIds.isEmpty()) {
-                return List.of();
-            }
-            return orderRepo.findAllWithDetailsByIdIn(orderIds)
+            return orderRepo.findAllWithDetailsByStatusAndTranslatorLanguage(
+                            status,
+                            normalizedLanguageCode
+                    )
                     .stream()
                     .map(OrderMapper::toResponse)
                     .toList();

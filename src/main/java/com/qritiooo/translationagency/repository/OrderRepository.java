@@ -66,35 +66,21 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     );
 
     @Query("""
-            select distinct o.id
+            select distinct o
             from Order o
-            left join o.translator t
+            left join fetch o.client c
+            left join fetch o.translator t
+            left join fetch o.documents d
+            left join fetch o.sourceLanguage sl
+            left join fetch o.targetLanguage tlg
             left join t.translatorLanguages tl
             left join tl.language l
             where (:status is null or o.status = :status)
               and (:languageCode is null or upper(l.code) = upper(:languageCode))
             order by o.id
             """)
-    List<Integer> findIdsByStatusAndTranslatorLanguageJpql(
+    List<Order> findAllWithDetailsByStatusAndTranslatorLanguage(
             @Param("status") OrderStatus status,
-            @Param("languageCode") String languageCode
-    );
-
-    @Query(
-            value = """
-                    select distinct o.id
-                    from orders o
-                    left join translators t on t.id = o.translator_id
-                    left join translator_languages tl on tl.translator_id = t.id
-                    left join languages l on l.id = tl.language_id
-                    where (:status is null or o.status = :status)
-                      and (:languageCode is null or upper(l.code) = upper(:languageCode))
-                    order by o.id
-                    """,
-            nativeQuery = true
-    )
-    List<Integer> findIdsByStatusAndTranslatorLanguageNative(
-            @Param("status") String status,
             @Param("languageCode") String languageCode
     );
 

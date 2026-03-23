@@ -41,6 +41,20 @@ public class DomainExceptionHandler extends AbstractExceptionHandler {
         );
     }
 
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiErrorResponse> handleConflict(
+            ConflictException ex,
+            HttpServletRequest request
+    ) {
+        logHandledException(HttpStatus.CONFLICT, ex.getMessage(), request, ex);
+        return buildError(
+                HttpStatus.CONFLICT,
+                ex.getMessage(),
+                request,
+                List.of()
+        );
+    }
+
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<ApiErrorResponse> handleNoSuchElement(
             NoSuchElementException ex,
@@ -62,6 +76,7 @@ public class DomainExceptionHandler extends AbstractExceptionHandler {
         String message = ex.getMostSpecificCause() != null
                 ? ex.getMostSpecificCause().getMessage()
                 : ex.getMessage();
+        logHandledException(HttpStatus.CONFLICT, message, request, ex);
         return buildError(
                 HttpStatus.CONFLICT,
                 message,

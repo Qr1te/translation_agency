@@ -44,6 +44,32 @@ public class ClientController {
         return ResponseEntity.ok(service.create(request));
     }
 
+    @PostMapping("/bulk")
+    @Operation(summary = "Create clients in bulk (transactional)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Clients created"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "409", description = "Conflict")
+    })
+    public ResponseEntity<List<ClientResponse>> createBulkTransactional(
+            @Valid @RequestBody List<@Valid ClientRequest> requests
+    ) {
+        return ResponseEntity.ok(service.createBulkTransactional(requests));
+    }
+
+    @PostMapping("/bulk/non-transactional")
+    @Operation(summary = "Create clients in bulk (non-transactional)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Clients created"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "409", description = "Conflict")
+    })
+    public ResponseEntity<List<ClientResponse>> createBulkNonTransactional(
+            @Valid @RequestBody List<@Valid ClientRequest> requests
+    ) {
+        return ResponseEntity.ok(service.createBulkNonTransactional(requests));
+    }
+
     @PutMapping("/{id}")
     @Operation(summary = "Update client")
     @ApiResponses(value = {

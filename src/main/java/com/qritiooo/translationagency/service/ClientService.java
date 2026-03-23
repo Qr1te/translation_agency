@@ -7,6 +7,10 @@ import java.util.List;
 public interface ClientService {
     ClientResponse create(ClientRequest request);
 
+    List<ClientResponse> createBulkTransactional(List<ClientRequest> requests);
+
+    List<ClientResponse> createBulkNonTransactional(List<ClientRequest> requests);
+
     ClientResponse update(Integer id, ClientRequest request);
 
     ClientResponse patch(Integer id, ClientRequest request);
