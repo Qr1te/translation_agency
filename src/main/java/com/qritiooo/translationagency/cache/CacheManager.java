@@ -16,7 +16,7 @@ public class CacheManager {
     private final Map<CacheKey, Object> storage = new HashMap<>();
 
     @SuppressWarnings("unchecked")
-    public synchronized <T> T computeIfAbsent(CacheKey key, Supplier<T> supplier) {
+    public <T> T computeIfAbsent(CacheKey key, Supplier<T> supplier) {
         if (storage.containsKey(key)) {
             log.debug("Cache hit for key: {}", key);
             return (T) storage.get(key);
