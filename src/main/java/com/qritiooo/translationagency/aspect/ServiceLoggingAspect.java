@@ -1,5 +1,7 @@
 package com.qritiooo.translationagency.aspect;
 
+import com.qritiooo.translationagency.exception.BadRequestException;
+import com.qritiooo.translationagency.exception.ConflictException;
 import com.qritiooo.translationagency.exception.NotFoundException;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
@@ -9,6 +11,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 @Aspect
@@ -43,10 +46,12 @@ public class ServiceLoggingAspect {
             return result;
         } catch (Throwable exception) {
             long duration = System.currentTimeMillis() - start;
-            if (isNotFound(exception)) {
+            HttpStatus handledStatus = resolveHandledStatus(exception);
+            if (handledStatus != null) {
                 log.warn(
-                        "Method {} failed with 404 error in {} ms: {}",
+                        "Method {} failed with {} error in {} ms: {}",
                         methodName,
+                        handledStatus.value(),
                         duration,
                         exception.getMessage()
                 );
@@ -63,8 +68,18 @@ public class ServiceLoggingAspect {
         }
     }
 
-    private boolean isNotFound(Throwable exception) {
-        return exception instanceof NotFoundException
-                || exception instanceof NoSuchElementException;
+    private HttpStatus resolveHandledStatus(Throwable exception) {
+        if (exception instanceof BadRequestException
+                || exception instanceof IllegalArgumentException) {
+            return HttpStatus.BAD_REQUEST;
+        }
+        if (exception instanceof NotFoundException
+                || exception instanceof NoSuchElementException) {
+            return HttpStatus.NOT_FOUND;
+        }
+        if (exception instanceof ConflictException) {
+            return HttpStatus.CONFLICT;
+        }
+        return null;
     }
 }

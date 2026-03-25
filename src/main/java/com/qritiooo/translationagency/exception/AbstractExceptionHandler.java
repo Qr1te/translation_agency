@@ -45,8 +45,7 @@ public abstract class AbstractExceptionHandler {
                     status.getReasonPhrase(),
                     request.getMethod(),
                     request.getRequestURI(),
-                    message,
-                    ex
+                    message
             );
         }
     }

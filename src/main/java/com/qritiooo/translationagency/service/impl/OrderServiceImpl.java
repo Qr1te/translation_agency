@@ -4,19 +4,27 @@ import com.qritiooo.translationagency.cache.CacheKey;
 import com.qritiooo.translationagency.cache.CacheManager;
 import com.qritiooo.translationagency.dto.request.OrderRequest;
 import com.qritiooo.translationagency.dto.response.OrderResponse;
+import com.qritiooo.translationagency.exception.BadRequestException;
 import com.qritiooo.translationagency.exception.NotFoundException;
 import com.qritiooo.translationagency.mapper.OrderMapper;
+import com.qritiooo.translationagency.model.Client;
 import com.qritiooo.translationagency.model.Document;
+import com.qritiooo.translationagency.model.Language;
 import com.qritiooo.translationagency.model.Order;
 import com.qritiooo.translationagency.model.OrderStatus;
+import com.qritiooo.translationagency.model.Translator;
+import com.qritiooo.translationagency.model.TranslatorLanguage;
 import com.qritiooo.translationagency.repository.ClientRepository;
 import com.qritiooo.translationagency.repository.DocumentRepository;
 import com.qritiooo.translationagency.repository.LanguageRepository;
 import com.qritiooo.translationagency.repository.OrderRepository;
 import com.qritiooo.translationagency.repository.TranslatorRepository;
 import com.qritiooo.translationagency.service.OrderService;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,31 +47,8 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse create(OrderRequest request) {
         Order o = new Order();
         OrderMapper.updateEntity(o, request);
-
-        Order savedOrder = orderRepo.save(o);
-        if (request.getSourceLanguageId() != null) {
-            savedOrder.setSourceLanguage(
-                    languageRepo.findById(request.getSourceLanguageId()).orElseThrow()
-            );
-            savedOrder = orderRepo.save(savedOrder);
-        }
-        if (request.getTargetLanguageId() != null) {
-            savedOrder.setTargetLanguage(
-                    languageRepo.findById(request.getTargetLanguageId()).orElseThrow()
-            );
-            savedOrder = orderRepo.save(savedOrder);
-        }
-        if (request.getClientId() != null) {
-            savedOrder.setClient(clientRepo.findById(request.getClientId()).orElseThrow());
-            savedOrder = orderRepo.save(savedOrder);
-        }
-        if (request.getTranslatorId() != null) {
-            savedOrder.setTranslator(
-                    translatorRepo.findById(request.getTranslatorId()).orElseThrow()
-            );
-            savedOrder = orderRepo.save(savedOrder);
-        }
-        OrderResponse response = saveWithDocumentsAndMap(savedOrder, request.getDocumentIds());
+        applyRelations(o, request);
+        OrderResponse response = saveWithDocumentsAndMap(o, request.getDocumentIds());
         cacheManager.invalidate(Order.class);
         return response;
     }
@@ -198,21 +183,68 @@ public class OrderServiceImpl implements OrderService {
 
     private void applyRelations(Order order, OrderRequest request) {
         if (request.getClientId() != null) {
-            order.setClient(clientRepo.findById(request.getClientId()).orElseThrow());
-        }
-        if (request.getTranslatorId() != null) {
-            order.setTranslator(translatorRepo.findById(request.getTranslatorId()).orElseThrow());
+            order.setClient(getClientOrThrow(request.getClientId()));
         }
         if (request.getSourceLanguageId() != null) {
-            order.setSourceLanguage(
-                    languageRepo.findById(request.getSourceLanguageId()).orElseThrow()
-            );
+            order.setSourceLanguage(getLanguageOrThrow(request.getSourceLanguageId()));
         }
         if (request.getTargetLanguageId() != null) {
-            order.setTargetLanguage(
-                    languageRepo.findById(request.getTargetLanguageId()).orElseThrow()
+            order.setTargetLanguage(getLanguageOrThrow(request.getTargetLanguageId()));
+        }
+        if (request.getTranslatorId() != null) {
+            order.setTranslator(getTranslatorOrThrow(request.getTranslatorId()));
+        }
+        validateTranslatorLanguages(order);
+    }
+
+    private Client getClientOrThrow(Integer clientId) {
+        return clientRepo.findById(clientId).orElseThrow();
+    }
+
+    private Language getLanguageOrThrow(Integer languageId) {
+        return languageRepo.findById(languageId).orElseThrow();
+    }
+
+    private Translator getTranslatorOrThrow(Integer translatorId) {
+        return translatorRepo.findById(translatorId).orElseThrow();
+    }
+
+    private void validateTranslatorLanguages(Order order) {
+        Translator translator = order.getTranslator();
+        if (translator == null) {
+            return;
+        }
+
+        List<String> missingLanguageCodes = Stream.of(
+                        order.getSourceLanguage(),
+                        order.getTargetLanguage()
+                )
+                .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new))
+                .stream()
+                .filter(Objects::nonNull)
+                .filter(language -> !translatorKnowsLanguage(translator, language))
+                .map(Language::getCode)
+                .filter(Objects::nonNull)
+                .toList();
+
+        if (!missingLanguageCodes.isEmpty()) {
+            throw new BadRequestException(
+                    "Translator with id "
+                            + translator.getId()
+                            + " does not support order languages: "
+                            + missingLanguageCodes
             );
         }
+    }
+
+    private boolean translatorKnowsLanguage(Translator translator, Language language) {
+        return translator.getTranslatorLanguages().stream()
+                .map(TranslatorLanguage::getLanguage)
+                .filter(Objects::nonNull)
+                .anyMatch(translatorLanguage -> Objects.equals(
+                        translatorLanguage.getId(),
+                        language.getId()
+                ));
     }
 
 
