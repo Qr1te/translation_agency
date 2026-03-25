@@ -19,6 +19,7 @@ public class DomainExceptionHandler extends AbstractExceptionHandler {
             NotFoundException ex,
             HttpServletRequest request
     ) {
+        logHandledException(HttpStatus.NOT_FOUND, ex.getMessage(), request, ex);
         return buildError(
                 HttpStatus.NOT_FOUND,
                 ex.getMessage(),
@@ -60,6 +61,7 @@ public class DomainExceptionHandler extends AbstractExceptionHandler {
             NoSuchElementException ex,
             HttpServletRequest request
     ) {
+        logHandledException(HttpStatus.NOT_FOUND, "Resource not found", request, ex);
         return buildError(
                 HttpStatus.NOT_FOUND,
                 "Resource not found",

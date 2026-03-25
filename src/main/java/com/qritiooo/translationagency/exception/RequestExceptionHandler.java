@@ -79,6 +79,12 @@ public class RequestExceptionHandler extends AbstractExceptionHandler {
             HttpRequestMethodNotSupportedException ex,
             HttpServletRequest request
     ) {
+        logHandledException(
+                HttpStatus.METHOD_NOT_ALLOWED,
+                "HTTP method not allowed for this endpoint",
+                request,
+                ex
+        );
         return buildError(
                 HttpStatus.METHOD_NOT_ALLOWED,
                 "HTTP method not allowed for this endpoint",
@@ -92,6 +98,7 @@ public class RequestExceptionHandler extends AbstractExceptionHandler {
             NoResourceFoundException ex,
             HttpServletRequest request
     ) {
+        logHandledException(HttpStatus.NOT_FOUND, "Resource not found", request, ex);
         return buildError(
                 HttpStatus.NOT_FOUND,
                 "Resource not found",

@@ -40,8 +40,9 @@ public abstract class AbstractExceptionHandler {
     ) {
         if (status.is4xxClientError()) {
             log.warn(
-                    "Handled {} for {} {}: {}",
+                    "Handled HTTP {} {} error for {} {}: {}",
                     status.value(),
+                    status.getReasonPhrase(),
                     request.getMethod(),
                     request.getRequestURI(),
                     message,

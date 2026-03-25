@@ -38,7 +38,7 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    @PostMapping({"", "/create"})
+    @PostMapping
     @Operation(summary = "Create order")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Order created"),

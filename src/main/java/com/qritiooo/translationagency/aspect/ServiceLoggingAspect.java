@@ -1,6 +1,8 @@
 package com.qritiooo.translationagency.aspect;
 
+import com.qritiooo.translationagency.exception.NotFoundException;
 import java.util.Arrays;
+import java.util.NoSuchElementException;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -39,13 +41,30 @@ public class ServiceLoggingAspect {
                     System.currentTimeMillis() - start
             );
             return result;
-        } catch (Exception exception) {
-            log.error(
-                    "Method {} failed in {} ms",
-                    methodName,
-                    System.currentTimeMillis() - start
-            );
+        } catch (Throwable exception) {
+            long duration = System.currentTimeMillis() - start;
+            if (isNotFound(exception)) {
+                log.warn(
+                        "Method {} failed with 404 error in {} ms: {}",
+                        methodName,
+                        duration,
+                        exception.getMessage()
+                );
+            } else {
+                log.error(
+                        "Method {} failed in {} ms: {}",
+                        methodName,
+                        duration,
+                        exception.getMessage(),
+                        exception
+                );
+            }
             throw exception;
         }
+    }
+
+    private boolean isNotFound(Throwable exception) {
+        return exception instanceof NotFoundException
+                || exception instanceof NoSuchElementException;
     }
 }
