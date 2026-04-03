@@ -1,8 +1,12 @@
 package com.qritiooo.translationagency.controller;
 
 import com.qritiooo.translationagency.dto.request.OrderRequest;
+import com.qritiooo.translationagency.dto.response.AsyncTaskCreatedResponse;
+import com.qritiooo.translationagency.dto.response.OrderAsyncTaskStatsResponse;
 import com.qritiooo.translationagency.dto.response.OrderResponse;
+import com.qritiooo.translationagency.dto.response.OrderTaskStatusResponse;
 import com.qritiooo.translationagency.model.OrderStatus;
+import com.qritiooo.translationagency.service.OrderAsyncService;
 import com.qritiooo.translationagency.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -37,6 +41,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderController {
 
     private final OrderService orderService;
+    private final OrderAsyncService orderAsyncService;
 
     @PostMapping
     @Operation(summary = "Create order")
@@ -112,6 +117,38 @@ public class OrderController {
                         languageCode
                 )
         );
+    }
+
+    @PostMapping("/reports/async")
+    @Operation(summary = "Start async order report generation")
+    @ApiResponse(responseCode = "200", description = "Task started")
+    public ResponseEntity<AsyncTaskCreatedResponse> startAsyncReport(
+            @RequestParam(required = false) OrderStatus status,
+            @Positive @RequestParam(required = false) Integer clientId,
+            @Positive @RequestParam(required = false) Integer translatorId
+    ) {
+        return ResponseEntity.ok(
+                orderAsyncService.startOrderReportTask(status, clientId, translatorId)
+        );
+    }
+
+    @GetMapping("/tasks/{taskId}")
+    @Operation(summary = "Get async task status")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Task status returned"),
+            @ApiResponse(responseCode = "404", description = "Task not found")
+    })
+    public ResponseEntity<OrderTaskStatusResponse> getTaskStatus(
+            @PathVariable String taskId
+    ) {
+        return ResponseEntity.ok(orderAsyncService.getTaskStatus(taskId));
+    }
+
+    @GetMapping("/tasks/stats")
+    @Operation(summary = "Get async task counters")
+    @ApiResponse(responseCode = "200", description = "Task counters returned")
+    public ResponseEntity<OrderAsyncTaskStatsResponse> getTaskStats() {
+        return ResponseEntity.ok(orderAsyncService.getTaskStats());
     }
 
     @PutMapping({"/{id}", "/update/{id}"})
