@@ -25,7 +25,7 @@ public class ValidationExceptionHandler extends AbstractExceptionHandler {
                 .stream()
                 .map(this::toValidationError)
                 .toList();
-        logHandledException(HttpStatus.BAD_REQUEST, VALIDATION_FAILED_MESSAGE, request, ex);
+        logHandledException(HttpStatus.BAD_REQUEST, VALIDATION_FAILED_MESSAGE, request);
         return buildError(
                 HttpStatus.BAD_REQUEST,
                 VALIDATION_FAILED_MESSAGE,
@@ -39,7 +39,7 @@ public class ValidationExceptionHandler extends AbstractExceptionHandler {
             HandlerMethodValidationException ex,
             HttpServletRequest request
     ) {
-        logHandledException(HttpStatus.BAD_REQUEST, VALIDATION_FAILED_MESSAGE, request, ex);
+        logHandledException(HttpStatus.BAD_REQUEST, VALIDATION_FAILED_MESSAGE, request);
         return buildError(
                 HttpStatus.BAD_REQUEST,
                 VALIDATION_FAILED_MESSAGE,
@@ -60,7 +60,7 @@ public class ValidationExceptionHandler extends AbstractExceptionHandler {
                         violation.getMessage()
                 ))
                 .toList();
-        logHandledException(HttpStatus.BAD_REQUEST, VALIDATION_FAILED_MESSAGE, request, ex);
+        logHandledException(HttpStatus.BAD_REQUEST, VALIDATION_FAILED_MESSAGE, request);
         return buildError(
                 HttpStatus.BAD_REQUEST,
                 VALIDATION_FAILED_MESSAGE,

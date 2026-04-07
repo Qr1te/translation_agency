@@ -15,9 +15,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class ConcurrencyDemoServiceImpl implements ConcurrencyDemoService {
 
-    private static final int THREAD_COUNT = 50;
-    private static final int INCREMENTS_PER_THREAD = 2_000;
-    private static final int EXPECTED_VALUE = THREAD_COUNT * INCREMENTS_PER_THREAD;
+    static final int THREAD_COUNT = 50;
+    static final int INCREMENTS_PER_THREAD = 2_000;
+    static final int EXPECTED_VALUE = THREAD_COUNT * INCREMENTS_PER_THREAD;
     private static final int UNSAFE_ATTEMPTS = 5;
 
     @Override
@@ -49,27 +49,26 @@ public class ConcurrencyDemoServiceImpl implements ConcurrencyDemoService {
         );
     }
 
-    private int runUnsafeScenario() {
+    int runUnsafeScenario() {
         UnsafeCounter counter = new UnsafeCounter();
         executeInParallel(counter::increment);
         return counter.getValue();
     }
 
-    private int runAtomicScenario() {
+    int runAtomicScenario() {
         AtomicCounter counter = new AtomicCounter();
         executeInParallel(counter::increment);
         return counter.getValue();
     }
 
-    private void executeInParallel(IncrementAction incrementAction) {
-        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
-        try {
+    void executeInParallel(Runnable incrementAction) {
+        try (ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT)) {
             List<Callable<Void>> tasks = new ArrayList<>();
             for (int threadIndex = 0; threadIndex < THREAD_COUNT; threadIndex++) {
                 tasks.add(() -> {
                     for (int incrementIndex = 0; incrementIndex < INCREMENTS_PER_THREAD;
                             incrementIndex++) {
-                        incrementAction.increment();
+                        incrementAction.run();
                     }
                     return null;
                 });
@@ -79,22 +78,22 @@ public class ConcurrencyDemoServiceImpl implements ConcurrencyDemoService {
             for (Future<Void> future : futures) {
                 future.get();
             }
+            executorService.shutdown();
+            awaitTermination(executorService);
+        } catch (InterruptedException interruptedException) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(
+                    "Concurrency demo interrupted",
+                    interruptedException
+            );
         } catch (Exception ex) {
             throw new IllegalStateException("Failed to execute concurrency demo", ex);
-        } finally {
-            executorService.shutdown();
-            try {
-                executorService.awaitTermination(5, TimeUnit.SECONDS);
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-                throw new IllegalStateException("Concurrency demo interrupted", ex);
-            }
         }
     }
 
-    @FunctionalInterface
-    private interface IncrementAction {
-        void increment();
+    private void awaitTermination(ExecutorService executorService)
+            throws InterruptedException {
+        executorService.awaitTermination(5, TimeUnit.SECONDS);
     }
 
     private static final class UnsafeCounter {

@@ -65,11 +65,11 @@ public class OrderAsyncTaskRegistry {
     private static final class TaskState {
         private final String taskId;
         private final Instant createdAt;
-        private volatile AsyncTaskStatus status;
-        private volatile Instant startedAt;
-        private volatile Instant completedAt;
-        private volatile String errorMessage;
-        private volatile OrderReportResponse result;
+        private AsyncTaskStatus status;
+        private Instant startedAt;
+        private Instant completedAt;
+        private String errorMessage;
+        private OrderReportResponse result;
 
         private TaskState(String taskId) {
             this.taskId = taskId;
@@ -96,7 +96,7 @@ public class OrderAsyncTaskRegistry {
             result = null;
         }
 
-        private OrderTaskStatusResponse toResponse() {
+        private synchronized OrderTaskStatusResponse toResponse() {
             return new OrderTaskStatusResponse(
                     taskId,
                     status,

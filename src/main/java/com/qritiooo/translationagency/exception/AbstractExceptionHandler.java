@@ -35,9 +35,7 @@ public abstract class AbstractExceptionHandler {
     protected void logHandledException(
             HttpStatus status,
             String message,
-            HttpServletRequest request,
-            Exception ex
-    ) {
+            HttpServletRequest request) {
         if (status.is4xxClientError()) {
             log.warn(
                     "Handled HTTP {} {} error for {} {}: {}",

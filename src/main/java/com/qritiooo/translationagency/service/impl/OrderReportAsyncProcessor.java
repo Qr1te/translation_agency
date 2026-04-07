@@ -7,6 +7,7 @@ import com.qritiooo.translationagency.repository.OrderRepository;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
@@ -24,10 +25,17 @@ public class OrderReportAsyncProcessor {
             String taskId,
             OrderStatus status,
             Integer clientId,
-            Integer translatorId
+            Integer translatorId,
+            boolean demoFail
     ) {
         taskRegistry.markRunning(taskId);
         try {
+            Thread.sleep(10000);
+
+            if (demoFail) {
+                throw new IllegalStateException("Demo failure");
+            }
+
             List<Order> filteredOrders = orderRepository.findAll()
                     .stream()
                     .filter(order -> status == null || order.getStatus() == status)
@@ -38,6 +46,10 @@ public class OrderReportAsyncProcessor {
             OrderReportResponse report = buildReport(filteredOrders);
             taskRegistry.markCompleted(taskId, report);
             return CompletableFuture.completedFuture(null);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            taskRegistry.markFailed(taskId, "Report generation interrupted");
+            throw new IllegalStateException("Report generation interrupted", ex);
         } catch (RuntimeException ex) {
             taskRegistry.markFailed(taskId, ex.getMessage());
             throw ex;
@@ -58,7 +70,7 @@ public class OrderReportAsyncProcessor {
                 .count();
         long totalAttachedDocuments = orders.stream()
                 .map(Order::getDocuments)
-                .filter(documents -> documents != null)
+                .filter(Objects::nonNull)
                 .mapToLong(List::size)
                 .sum();
 

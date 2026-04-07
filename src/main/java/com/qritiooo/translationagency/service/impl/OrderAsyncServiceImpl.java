@@ -20,11 +20,18 @@ public class OrderAsyncServiceImpl implements OrderAsyncService {
     public AsyncTaskCreatedResponse startOrderReportTask(
             OrderStatus status,
             Integer clientId,
-            Integer translatorId
+            Integer translatorId,
+            boolean demoFail
     ) {
         String taskId = UUID.randomUUID().toString();
         taskRegistry.createTask(taskId);
-        orderReportAsyncProcessor.generateReport(taskId, status, clientId, translatorId);
+        orderReportAsyncProcessor.generateReport(
+                taskId,
+                status,
+                clientId,
+                translatorId,
+                demoFail
+        );
         return new AsyncTaskCreatedResponse(taskId);
     }
 

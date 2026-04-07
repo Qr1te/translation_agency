@@ -124,11 +124,17 @@ public class OrderController {
     @ApiResponse(responseCode = "200", description = "Task started")
     public ResponseEntity<AsyncTaskCreatedResponse> startAsyncReport(
             @RequestParam(required = false) OrderStatus status,
-            @Positive @RequestParam(required = false) Integer clientId,
-            @Positive @RequestParam(required = false) Integer translatorId
+            @RequestParam(required = false) Integer clientId,
+            @RequestParam(required = false) Integer translatorId,
+            @RequestParam(defaultValue = "false") boolean demoFail
     ) {
         return ResponseEntity.ok(
-                orderAsyncService.startOrderReportTask(status, clientId, translatorId)
+                orderAsyncService.startOrderReportTask(
+                        status,
+                        clientId,
+                        translatorId,
+                        demoFail
+                )
         );
     }
 

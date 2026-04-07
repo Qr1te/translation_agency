@@ -25,9 +25,7 @@ public class RequestExceptionHandler extends AbstractExceptionHandler {
         logHandledException(
                 HttpStatus.BAD_REQUEST,
                 "Malformed request JSON or invalid enum/date value",
-                request,
-                ex
-        );
+                request);
         return buildError(
                 HttpStatus.BAD_REQUEST,
                 "Malformed request JSON or invalid enum/date value",
@@ -44,9 +42,7 @@ public class RequestExceptionHandler extends AbstractExceptionHandler {
         logHandledException(
                 HttpStatus.BAD_REQUEST,
                 "Missing required request parameter: " + ex.getParameterName(),
-                request,
-                ex
-        );
+                request);
         return buildError(
                 HttpStatus.BAD_REQUEST,
                 "Missing required request parameter: " + ex.getParameterName(),
@@ -63,9 +59,7 @@ public class RequestExceptionHandler extends AbstractExceptionHandler {
         logHandledException(
                 HttpStatus.BAD_REQUEST,
                 "Invalid value for parameter: " + ex.getName(),
-                request,
-                ex
-        );
+                request);
         return buildError(
                 HttpStatus.BAD_REQUEST,
                 "Invalid value for parameter: " + ex.getName(),
@@ -82,9 +76,7 @@ public class RequestExceptionHandler extends AbstractExceptionHandler {
         logHandledException(
                 HttpStatus.METHOD_NOT_ALLOWED,
                 "HTTP method not allowed for this endpoint",
-                request,
-                ex
-        );
+                request);
         return buildError(
                 HttpStatus.METHOD_NOT_ALLOWED,
                 "HTTP method not allowed for this endpoint",
@@ -98,7 +90,7 @@ public class RequestExceptionHandler extends AbstractExceptionHandler {
             NoResourceFoundException ex,
             HttpServletRequest request
     ) {
-        logHandledException(HttpStatus.NOT_FOUND, "Resource not found", request, ex);
+        logHandledException(HttpStatus.NOT_FOUND, "Resource not found", request);
         return buildError(
                 HttpStatus.NOT_FOUND,
                 "Resource not found",

@@ -9,7 +9,8 @@ public interface OrderAsyncService {
     AsyncTaskCreatedResponse startOrderReportTask(
             OrderStatus status,
             Integer clientId,
-            Integer translatorId
+            Integer translatorId,
+            boolean demoFail
     );
 
     OrderTaskStatusResponse getTaskStatus(String taskId);

@@ -1,7 +1,7 @@
 package com.qritiooo.translationagency.concurrency;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +31,7 @@ class RaceConditionDemoTest {
     void shouldSolveRaceConditionWithAtomicCounter() throws Exception {
         int actual = runAtomicCounterScenario();
 
-        assertTrue(actual == EXPECTED_TOTAL);
+        assertEquals(EXPECTED_TOTAL, actual);
     }
 
     private int runUnsafeCounterScenario() throws Exception {
@@ -47,8 +47,7 @@ class RaceConditionDemoTest {
     }
 
     private void executeInParallel(IncrementAction incrementAction) throws Exception {
-        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
-        try {
+        try (ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT)) {
             List<Callable<Void>> tasks = new ArrayList<>();
             for (int threadIndex = 0; threadIndex < THREAD_COUNT; threadIndex++) {
                 tasks.add(() -> {
@@ -64,7 +63,6 @@ class RaceConditionDemoTest {
             for (Future<Void> future : futures) {
                 awaitFuture(future);
             }
-        } finally {
             executorService.shutdown();
             executorService.awaitTermination(5, TimeUnit.SECONDS);
         }

@@ -19,7 +19,7 @@ public class DomainExceptionHandler extends AbstractExceptionHandler {
             NotFoundException ex,
             HttpServletRequest request
     ) {
-        logHandledException(HttpStatus.NOT_FOUND, ex.getMessage(), request, ex);
+        logHandledException(HttpStatus.NOT_FOUND, ex.getMessage(), request);
         return buildError(
                 HttpStatus.NOT_FOUND,
                 ex.getMessage(),
@@ -33,7 +33,7 @@ public class DomainExceptionHandler extends AbstractExceptionHandler {
             RuntimeException ex,
             HttpServletRequest request
     ) {
-        logHandledException(HttpStatus.BAD_REQUEST, ex.getMessage(), request, ex);
+        logHandledException(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
         return buildError(
                 HttpStatus.BAD_REQUEST,
                 ex.getMessage(),
@@ -47,7 +47,7 @@ public class DomainExceptionHandler extends AbstractExceptionHandler {
             ConflictException ex,
             HttpServletRequest request
     ) {
-        logHandledException(HttpStatus.CONFLICT, ex.getMessage(), request, ex);
+        logHandledException(HttpStatus.CONFLICT, ex.getMessage(), request);
         return buildError(
                 HttpStatus.CONFLICT,
                 ex.getMessage(),
@@ -61,7 +61,7 @@ public class DomainExceptionHandler extends AbstractExceptionHandler {
             NoSuchElementException ex,
             HttpServletRequest request
     ) {
-        logHandledException(HttpStatus.NOT_FOUND, "Resource not found", request, ex);
+        logHandledException(HttpStatus.NOT_FOUND, "Resource not found", request);
         return buildError(
                 HttpStatus.NOT_FOUND,
                 "Resource not found",
@@ -76,7 +76,7 @@ public class DomainExceptionHandler extends AbstractExceptionHandler {
             HttpServletRequest request
     ) {
         String message = ex.getMostSpecificCause().getMessage();
-        logHandledException(HttpStatus.CONFLICT, message, request, ex);
+        logHandledException(HttpStatus.CONFLICT, message, request);
         return buildError(
                 HttpStatus.CONFLICT,
                 message,

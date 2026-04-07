@@ -10,6 +10,7 @@ import com.qritiooo.translationagency.cache.CacheKey;
 import com.qritiooo.translationagency.cache.CacheManager;
 import com.qritiooo.translationagency.dto.request.OrderRequest;
 import com.qritiooo.translationagency.dto.response.OrderResponse;
+import com.qritiooo.translationagency.exception.BadRequestException;
 import com.qritiooo.translationagency.exception.NotFoundException;
 import com.qritiooo.translationagency.model.Client;
 import com.qritiooo.translationagency.model.Document;
@@ -17,6 +18,8 @@ import com.qritiooo.translationagency.model.Language;
 import com.qritiooo.translationagency.model.Order;
 import com.qritiooo.translationagency.model.OrderStatus;
 import com.qritiooo.translationagency.model.Translator;
+import com.qritiooo.translationagency.model.TranslatorLanguage;
+import com.qritiooo.translationagency.model.TranslatorLanguageId;
 import com.qritiooo.translationagency.repository.ClientRepository;
 import com.qritiooo.translationagency.repository.DocumentRepository;
 import com.qritiooo.translationagency.repository.LanguageRepository;
@@ -73,8 +76,7 @@ class OrderServiceImplTest {
         Language target = new Language(2, "RU", "Russian");
         Client client = new Client();
         client.setId(3);
-        Translator translator = new Translator();
-        translator.setId(4);
+        Translator translator = translatorWithLanguages(4, source, target);
         Document first = new Document(11, "Doc1", 1, null);
         Document second = new Document(12, "Doc2", 2, null);
 
@@ -115,13 +117,18 @@ class OrderServiceImplTest {
                 4,
                 List.of()
         );
+        Language source = new Language(1, "EN", "English");
+        Language target = new Language(2, "RU", "Russian");
+        Client client = new Client();
+        client.setId(3);
+        Translator translator = translatorWithLanguages(4, source, target);
 
         when(orderRepository.findById(50)).thenReturn(Optional.of(existing));
         when(orderRepository.save(existing)).thenReturn(existing);
-        when(languageRepository.findById(1)).thenReturn(Optional.of(new Language(1, "EN", "English")));
-        when(languageRepository.findById(2)).thenReturn(Optional.of(new Language(2, "RU", "Russian")));
-        when(clientRepository.findById(3)).thenReturn(Optional.of(new Client()));
-        when(translatorRepository.findById(4)).thenReturn(Optional.of(new Translator()));
+        when(languageRepository.findById(1)).thenReturn(Optional.of(source));
+        when(languageRepository.findById(2)).thenReturn(Optional.of(target));
+        when(clientRepository.findById(3)).thenReturn(Optional.of(client));
+        when(translatorRepository.findById(4)).thenReturn(Optional.of(translator));
         when(documentRepository.findByOrder_Id(50)).thenReturn(List.of());
 
         OrderResponse response = orderService.update(50, request);
@@ -270,8 +277,6 @@ class OrderServiceImplTest {
         verify(orderRepository).findAllWithDetailsByStatusAndTranslatorLanguage(OrderStatus.NEW, null);
     }
 
-
-
     @Test
     @SuppressWarnings("unchecked")
     void findByStatusAndTranslatorLanguageNative_ShouldPassNull_WhenLanguageIsNull() {
@@ -291,6 +296,7 @@ class OrderServiceImplTest {
         assertEquals(0, result.size());
         verify(orderRepository).findAllWithDetailsByStatusAndTranslatorLanguage(OrderStatus.NEW, null);
     }
+
     @Test
     @SuppressWarnings("unchecked")
     void findByStatusAndTranslatorLanguageJpql_ShouldNormalizeAllSupportedAliases() {
@@ -348,6 +354,7 @@ class OrderServiceImplTest {
         assertEquals(101, response.getId());
         assertEquals("Simple Order", response.getTitle());
     }
+
     @Test
     void delete_ShouldDeleteByIdAndInvalidateCache() {
         orderService.delete(123);
@@ -355,5 +362,46 @@ class OrderServiceImplTest {
         verify(orderRepository).deleteById(123);
         verify(cacheManager).invalidate(Order.class);
     }
-}
+    @Test
+    void create_ShouldThrowBadRequest_WhenTranslatorDoesNotKnowOrderLanguage() {
+        OrderRequest request = new OrderRequest(
+                "Invalid Order",
+                OrderStatus.NEW,
+                1,
+                2,
+                3,
+                4,
+                List.of()
+        );
+        Language source = new Language(1, "EN", "English");
+        Language target = new Language(2, "RU", "Russian");
+        Client client = new Client();
+        client.setId(3);
+        Translator translator = translatorWithLanguages(4, source);
 
+        when(languageRepository.findById(1)).thenReturn(Optional.of(source));
+        when(languageRepository.findById(2)).thenReturn(Optional.of(target));
+        when(clientRepository.findById(3)).thenReturn(Optional.of(client));
+        when(translatorRepository.findById(4)).thenReturn(Optional.of(translator));
+
+        assertThrows(BadRequestException.class, () -> orderService.create(request));
+    }
+    private Translator translatorWithLanguages(
+            Integer translatorId,
+            Language... languages
+    ) {
+        Translator translator = new Translator();
+        translator.setId(translatorId);
+        List<TranslatorLanguage> translatorLanguages = java.util.Arrays.stream(languages)
+                .map(language -> {
+                    TranslatorLanguage translatorLanguage = new TranslatorLanguage();
+                    translatorLanguage.setId(new TranslatorLanguageId(translatorId, language.getId()));
+                    translatorLanguage.setTranslator(translator);
+                    translatorLanguage.setLanguage(language);
+                    return translatorLanguage;
+                })
+                .toList();
+        translator.setTranslatorLanguages(translatorLanguages);
+        return translator;
+    }
+}
