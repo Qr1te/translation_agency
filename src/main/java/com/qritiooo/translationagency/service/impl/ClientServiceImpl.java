@@ -13,10 +13,11 @@ import com.qritiooo.translationagency.model.Order;
 import com.qritiooo.translationagency.repository.ClientRepository;
 import com.qritiooo.translationagency.repository.OrderRepository;
 import com.qritiooo.translationagency.service.ClientService;
-import java.util.LinkedHashSet;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class ClientServiceImpl implements ClientService {
     private final ClientRepository repo;
     private final OrderRepository orderRepo;
     private final CacheManager cacheManager;
+    private final Validator validator;
 
     @Override
     public ClientResponse create(ClientRequest request) {
@@ -94,7 +96,7 @@ public class ClientServiceImpl implements ClientService {
 
     private ClientResponse saveAndMap(Client client) {
         ensureEmailIsUnique(client);
-        ClientResponse response = ClientMapper.toResponse(repo.save(client));
+        ClientResponse response = ClientMapper.toResponse(repo.saveAndFlush(client));
         cacheManager.invalidate(Client.class, Order.class);
         return response;
     }
@@ -104,12 +106,12 @@ public class ClientServiceImpl implements ClientService {
                 .filter(list -> !list.isEmpty())
                 .orElseThrow(() -> new BadRequestException("Bulk request must not be empty"));
 
-        ensureNoDuplicateEmailsInPayload(validatedRequests);
-
-        return validatedRequests.stream()
-                .map(this::mapToClient)
-                .map(this::saveAndMap)
-                .toList();
+        List<ClientResponse> responses = new ArrayList<>();
+        for (ClientRequest request : validatedRequests) {
+            validateRequest(request);
+            responses.add(saveAndMap(mapToClient(request)));
+        }
+        return responses;
     }
 
     private Client mapToClient(ClientRequest request) {
@@ -118,18 +120,10 @@ public class ClientServiceImpl implements ClientService {
         return client;
     }
 
-    private void ensureNoDuplicateEmailsInPayload(List<ClientRequest> requests) {
-        Set<String> uniqueEmails = new LinkedHashSet<>();
-        List<String> duplicates = requests.stream()
-                .map(ClientRequest::getEmail)
-                .filter(Objects::nonNull)
-                .map(email -> email.trim().toLowerCase(Locale.ROOT))
-                .filter(email -> !uniqueEmails.add(email))
-                .distinct()
-                .toList();
-
-        if (!duplicates.isEmpty()) {
-            throw new ConflictException("Duplicate emails in bulk request: " + duplicates);
+    private void validateRequest(ClientRequest request) {
+        Set<ConstraintViolation<ClientRequest>> violations = validator.validate(request);
+        if (!violations.isEmpty()) {
+            throw new ConstraintViolationException(violations);
         }
     }
 

@@ -52,7 +52,7 @@ public class ClientController {
             @ApiResponse(responseCode = "409", description = "Conflict")
     })
     public ResponseEntity<List<ClientResponse>> createBulkTransactional(
-            @Valid @RequestBody List<@Valid ClientRequest> requests
+            @RequestBody List<ClientRequest> requests
     ) {
         return ResponseEntity.ok(service.createBulkTransactional(requests));
     }
@@ -65,7 +65,7 @@ public class ClientController {
             @ApiResponse(responseCode = "409", description = "Conflict")
     })
     public ResponseEntity<List<ClientResponse>> createBulkNonTransactional(
-            @Valid @RequestBody List<@Valid ClientRequest> requests
+            @RequestBody List<ClientRequest> requests
     ) {
         return ResponseEntity.ok(service.createBulkNonTransactional(requests));
     }

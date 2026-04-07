@@ -21,10 +21,16 @@ import com.qritiooo.translationagency.model.Client;
 import com.qritiooo.translationagency.model.Order;
 import com.qritiooo.translationagency.repository.ClientRepository;
 import com.qritiooo.translationagency.repository.OrderRepository;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -43,14 +49,22 @@ class ClientServiceImplTest {
     @Mock
     private CacheManager cacheManager;
 
+    @Mock
+    private Validator validator;
+
     @InjectMocks
     private ClientServiceImpl clientService;
+
+    @BeforeEach
+    void setUpValidator() {
+        org.mockito.Mockito.lenient().when(validator.validate(any(ClientRequest.class))).thenReturn(Collections.emptySet());
+    }
 
     @Test
     void create_ShouldSaveClient_WhenEmailIsUnique() {
         ClientRequest request = new ClientRequest("Anna", "Kovalenko", "anna@test.com");
         when(clientRepository.existsByEmailIgnoreCase("anna@test.com")).thenReturn(false);
-        when(clientRepository.save(any(Client.class))).thenAnswer(invocation -> {
+        when(clientRepository.saveAndFlush(any(Client.class))).thenAnswer(invocation -> {
             Client client = invocation.getArgument(0);
             client.setId(101);
             return client;
@@ -66,7 +80,7 @@ class ClientServiceImplTest {
     @Test
     void create_ShouldSaveClient_WhenEmailIsNull() {
         ClientRequest request = new ClientRequest("Anna", "Kovalenko", null);
-        when(clientRepository.save(any(Client.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(clientRepository.saveAndFlush(any(Client.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ClientResponse result = clientService.create(request);
 
@@ -78,7 +92,7 @@ class ClientServiceImplTest {
     @Test
     void create_ShouldSaveClient_WhenEmailIsBlank() {
         ClientRequest request = new ClientRequest("Anna", "Kovalenko", "   ");
-        when(clientRepository.save(any(Client.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(clientRepository.saveAndFlush(any(Client.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ClientResponse result = clientService.create(request);
 
@@ -91,7 +105,7 @@ class ClientServiceImplTest {
         when(clientRepository.existsByEmailIgnoreCase("anna@test.com")).thenReturn(true);
 
         assertThrows(ConflictException.class, () -> clientService.create(request));
-        verify(clientRepository, never()).save(any(Client.class));
+        verify(clientRepository, never()).saveAndFlush(any(Client.class));
     }
 
     @Test
@@ -101,7 +115,7 @@ class ClientServiceImplTest {
 
         when(clientRepository.existsByEmailIgnoreCase(anyString())).thenReturn(false);
         AtomicInteger seq = new AtomicInteger(1);
-        when(clientRepository.save(any(Client.class))).thenAnswer(invocation -> {
+        when(clientRepository.saveAndFlush(any(Client.class))).thenAnswer(invocation -> {
             Client client = invocation.getArgument(0);
             client.setId(seq.getAndIncrement());
             return client;
@@ -112,7 +126,7 @@ class ClientServiceImplTest {
         assertEquals(2, result.size());
         assertEquals("anna@test.com", result.getFirst().getEmail());
         assertEquals("ivan@test.com", result.get(1).getEmail());
-        verify(clientRepository, times(2)).save(any(Client.class));
+        verify(clientRepository, times(2)).saveAndFlush(any(Client.class));
         verify(cacheManager, times(2)).invalidate(Client.class, Order.class);
     }
 
@@ -121,12 +135,12 @@ class ClientServiceImplTest {
         ClientRequest first = new ClientRequest("Anna", "Kovalenko", "anna@test.com");
         ClientRequest second = new ClientRequest("Ivan", "Petrov", "ivan@test.com");
         when(clientRepository.existsByEmailIgnoreCase(anyString())).thenReturn(false);
-        when(clientRepository.save(any(Client.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(clientRepository.saveAndFlush(any(Client.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         List<ClientResponse> result = clientService.createBulkNonTransactional(List.of(first, second));
 
         assertEquals(2, result.size());
-        verify(clientRepository, times(2)).save(any(Client.class));
+        verify(clientRepository, times(2)).saveAndFlush(any(Client.class));
     }
 
     @Test
@@ -134,12 +148,14 @@ class ClientServiceImplTest {
         ClientRequest first = new ClientRequest("Anna", "Kovalenko", "anna@test.com");
         ClientRequest second = new ClientRequest("Ann", "K", "ANNA@test.com");
         List<ClientRequest> requests = List.of(first, second);
+        when(clientRepository.existsByEmailIgnoreCase(anyString())).thenReturn(false, true);
+        when(clientRepository.saveAndFlush(any(Client.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         assertThrows(
                 ConflictException.class,
                 () -> clientService.createBulkTransactional(requests)
         );
-        verify(clientRepository, never()).save(any(Client.class));
+        verify(clientRepository, times(1)).saveAndFlush(any(Client.class));
     }
 
     @Test
@@ -150,7 +166,7 @@ class ClientServiceImplTest {
                 BadRequestException.class,
                 () -> clientService.createBulkTransactional(requests)
         );
-        verify(clientRepository, never()).save(any(Client.class));
+        verify(clientRepository, never()).saveAndFlush(any(Client.class));
     }
 
     @Test
@@ -159,7 +175,7 @@ class ClientServiceImplTest {
                 BadRequestException.class,
                 () -> clientService.createBulkTransactional(null)
         );
-        verify(clientRepository, never()).save(any(Client.class));
+        verify(clientRepository, never()).saveAndFlush(any(Client.class));
     }
 
     @Test
@@ -169,13 +185,13 @@ class ClientServiceImplTest {
         List<ClientRequest> requests = List.of(first, second);
 
         when(clientRepository.existsByEmailIgnoreCase(anyString())).thenReturn(false, true);
-        when(clientRepository.save(any(Client.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(clientRepository.saveAndFlush(any(Client.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         assertThrows(
                 ConflictException.class,
                 () -> clientService.createBulkNonTransactional(requests)
         );
-        verify(clientRepository, times(1)).save(any(Client.class));
+        verify(clientRepository, times(1)).saveAndFlush(any(Client.class));
     }
 
     @Test
@@ -184,7 +200,7 @@ class ClientServiceImplTest {
         ClientRequest request = new ClientRequest("New", "Name", "new@test.com");
         when(clientRepository.findById(10)).thenReturn(Optional.of(existing));
         when(clientRepository.existsByEmailIgnoreCaseAndIdNot("new@test.com", 10)).thenReturn(false);
-        when(clientRepository.save(existing)).thenReturn(existing);
+        when(clientRepository.saveAndFlush(existing)).thenReturn(existing);
 
         ClientResponse result = clientService.update(10, request);
 
@@ -201,7 +217,7 @@ class ClientServiceImplTest {
         when(clientRepository.existsByEmailIgnoreCaseAndIdNot("new@test.com", 10)).thenReturn(true);
 
         assertThrows(ConflictException.class, () -> clientService.update(10, request));
-        verify(clientRepository, never()).save(any(Client.class));
+        verify(clientRepository, never()).saveAndFlush(any(Client.class));
     }
 
     @Test
@@ -210,13 +226,13 @@ class ClientServiceImplTest {
         ClientRequest request = new ClientRequest("C", "D", "after@test.com");
         when(clientRepository.findById(11)).thenReturn(Optional.of(existing));
         when(clientRepository.existsByEmailIgnoreCaseAndIdNot("after@test.com", 11)).thenReturn(false);
-        when(clientRepository.save(existing)).thenReturn(existing);
+        when(clientRepository.saveAndFlush(existing)).thenReturn(existing);
 
         ClientResponse result = clientService.patch(11, request);
 
         assertEquals(11, result.getId());
         assertEquals("after@test.com", result.getEmail());
-        verify(clientRepository).save(existing);
+        verify(clientRepository).saveAndFlush(existing);
     }
 
     @Test
@@ -280,3 +296,7 @@ class ClientServiceImplTest {
         verify(clientRepository, never()).delete(any(Client.class));
     }
 }
+
+
+
+
