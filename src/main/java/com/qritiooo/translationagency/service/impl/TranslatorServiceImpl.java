@@ -16,8 +16,10 @@ import com.qritiooo.translationagency.repository.LanguageRepository;
 import com.qritiooo.translationagency.repository.OrderRepository;
 import com.qritiooo.translationagency.repository.TranslatorRepository;
 import com.qritiooo.translationagency.service.TranslatorService;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -106,7 +108,24 @@ public class TranslatorServiceImpl implements TranslatorService {
         }
 
         ensureNoDuplicateLanguageIds(languageRequests);
-        translator.getTranslatorLanguages().clear();
+
+        Map<Integer, TranslatorLanguage> existingLanguagesById = new HashMap<>();
+        for (TranslatorLanguage translatorLanguage : translator.getTranslatorLanguages()) {
+            existingLanguagesById.put(translatorLanguage.getLanguage().getId(), translatorLanguage);
+        }
+
+        Set<Integer> requestedLanguageIds = new HashSet<>();
+        for (TranslatorLanguageRequest languageRequest : languageRequests) {
+            if (languageRequest.getLanguageId() != null) {
+                requestedLanguageIds.add(languageRequest.getLanguageId());
+            }
+        }
+
+        translator.getTranslatorLanguages().removeIf(
+                translatorLanguage -> !requestedLanguageIds.contains(
+                        translatorLanguage.getLanguage().getId()
+                )
+        );
 
         for (TranslatorLanguageRequest languageRequest : languageRequests) {
             Integer languageId = languageRequest.getLanguageId();
@@ -123,11 +142,14 @@ public class TranslatorServiceImpl implements TranslatorService {
                     () -> new NotFoundException("Language not found with id: " + languageId)
             );
 
-            TranslatorLanguage translatorLanguage = new TranslatorLanguage();
-            translatorLanguage.setTranslator(translator);
-            translatorLanguage.setLanguage(language);
+            TranslatorLanguage translatorLanguage = existingLanguagesById.get(languageId);
+            if (translatorLanguage == null) {
+                translatorLanguage = new TranslatorLanguage();
+                translatorLanguage.setTranslator(translator);
+                translatorLanguage.setLanguage(language);
+                translator.getTranslatorLanguages().add(translatorLanguage);
+            }
             translatorLanguage.setProficiencyLevel(languageRequest.getProficiencyLevel());
-            translator.getTranslatorLanguages().add(translatorLanguage);
         }
     }
 
