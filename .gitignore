@@ -41,7 +41,9 @@ build/
 .jmeter/
 
 *.log
-META-INF
+META-INF/
+!src/main/resources/META-INF/
+!src/main/resources/META-INF/spring.factories
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
