@@ -1,0 +1,46 @@
+services:
+  - type: web
+    runtime: docker
+    name: translation-agency-api
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    autoDeployTrigger: off
+    healthCheckPath: /actuator/health
+    buildFilter:
+      paths:
+        - .mvn/**
+        - config/**
+        - Dockerfile
+        - mvnw
+        - pom.xml
+        - src/**
+      ignoredPaths:
+        - frontend/**
+        - jmeter/**
+        - postman/**
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: translation-agency-db
+          property: connectionString
+      - key: SPRING_JPA_HIBERNATE_DDL_AUTO
+        value: update
+      - key: SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION
+        value: "true"
+      - key: SPRING_SQL_INIT_MODE
+        value: always
+      - key: APP_CORS_ALLOWED_ORIGINS
+        value: "*"
+
+databases:
+  - name: translation-agency-db
+    plan: free
+    region: oregon
+    postgresMajorVersion: "16"
+    databaseName: translation_agency
+    user: translation_agency
+    ipAllowList: []

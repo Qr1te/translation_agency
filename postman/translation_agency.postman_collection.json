@@ -1,0 +1,606 @@
+﻿{
+    "info":  {
+                 "name":  "Translation Agency API",
+                 "description":  "Collection for testing translation_agency API.",
+                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+             },
+    "variable":  [
+                     {
+                         "key":  "baseUrl",
+                         "value":  "http://localhost:8080"
+                     },
+                     {
+                         "key":  "clientId",
+                         "value":  "1"
+                     },
+                     {
+                         "key":  "languageCode",
+                         "value":  "EN"
+                     },
+                     {
+                         "key":  "sourceLanguageId",
+                         "value":  "1"
+                     },
+                     {
+                         "key":  "targetLanguageId",
+                         "value":  "3"
+                     },
+                     {
+                         "key":  "translatorId",
+                         "value":  "1"
+                     },
+                     {
+                         "key":  "page",
+                         "value":  "0"
+                     },
+                     {
+                         "key":  "size",
+                         "value":  "10"
+                     },
+                     {
+                         "key":  "sort",
+                         "value":  "id,asc"
+                     },
+                     {
+                         "key":  "orderId",
+                         "value":  "1"
+                     },
+                     {
+                         "key":  "documentId",
+                         "value":  "1"
+                     },
+                     {
+                         "key":  "orderTitle",
+                         "value":  "Order-001"
+                     },
+                     {
+                         "key":  "taskId",
+                         "value":  "demo-task-id"
+                     }
+                 ],
+    "item":  [
+                 {
+                     "name":  "Clients",
+                     "item":  [
+                                  {
+                                      "name":  "Create client",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status is 200\u0027, function () { pm.response.to.have.status(200); });",
+                                                                                    "var json = pm.response.json();",
+                                                                                    "if (json \u0026\u0026 json.id) { pm.collectionVariables.set(\u0027clientId\u0027, String(json.id)); }"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"firstName\": \"Ivan\",\n  \"lastName\": \"Petrov\",\n  \"email\": \"ivan.petrov@example.com\"\n}"
+                                                               },
+                                                      "url":  "{{baseUrl}}/api/clients"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Create clients bulk (transactional)",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status is 200\u0027, function () { pm.response.to.have.status(200); });",
+                                                                                    "var json = pm.response.json();",
+                                                                                    "if (Array.isArray(json) \u0026\u0026 json.length \u003e 0 \u0026\u0026 json[0].id) { pm.collectionVariables.set(\u0027clientId\u0027, String(json[0].id)); }"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "[\n  {\n    \"firstName\": \"Anna\",\n    \"lastName\": \"Kovalenko\",\n    \"email\": \"anna.bulk@example.com\"\n  },\n  {\n    \"firstName\": \"Ivan\",\n    \"lastName\": \"Petrov\",\n    \"email\": \"ivan.bulk@example.com\"\n  }\n]"
+                                                               },
+                                                      "url":  "{{baseUrl}}/api/clients/bulk"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Create clients bulk (non-transactional)",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status is 200 or 409\u0027, function () { pm.expect(pm.response.code).to.be.oneOf([200, 409]); });",
+                                                                                    "if (pm.response.code === 200) {",
+                                                                                    "  var json = pm.response.json();",
+                                                                                    "  if (Array.isArray(json) \u0026\u0026 json.length \u003e 0 \u0026\u0026 json[0].id) { pm.collectionVariables.set(\u0027clientId\u0027, String(json[0].id)); }",
+                                                                                    "}"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "[\n  {\n    \"firstName\": \"Maria\",\n    \"lastName\": \"Sidorova\",\n    \"email\": \"maria.bulk@example.com\"\n  },\n  {\n    \"firstName\": \"Pavel\",\n    \"lastName\": \"Orlov\",\n    \"email\": \"pavel.bulk@example.com\"\n  }\n]"
+                                                               },
+                                                      "url":  "{{baseUrl}}/api/clients/bulk/non-transactional"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get all clients",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/clients"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get client by id",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/clients/{{clientId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Update client",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"firstName\": \"Ivan\",\n  \"lastName\": \"Petrov Updated\",\n  \"email\": \"ivan.updated@example.com\"\n}"
+                                                               },
+                                                      "url":  "{{baseUrl}}/api/clients/{{clientId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Patch client",
+                                      "request":  {
+                                                      "method":  "PATCH",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"ivan.patch@example.com\"\n}"
+                                                               },
+                                                      "url":  "{{baseUrl}}/api/clients/{{clientId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Delete client",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  "{{baseUrl}}/api/clients/{{clientId}}"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Languages",
+                     "item":  [
+                                  {
+                                      "name":  "Get all languages",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/languages"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get language by code",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/languages/{{languageCode}}"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Translators",
+                     "item":  [
+                                  {
+                                      "name":  "Create translator",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status is 200\u0027, function () { pm.response.to.have.status(200); });",
+                                                                                    "var json = pm.response.json();",
+                                                                                    "if (json \u0026\u0026 json.id) { pm.collectionVariables.set(\u0027translatorId\u0027, String(json.id)); }"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"firstName\": \"Anna\",\n  \"lastName\": \"Ivanova\",\n  \"ratePerPage\": 15.50,\n  \"languages\": [\n    {\n      \"languageId\": {{sourceLanguageId}},\n      \"proficiencyLevel\": \"ADVANCED\"\n    },\n    {\n      \"languageId\": {{targetLanguageId}},\n      \"proficiencyLevel\": \"INTERMEDIATE\"\n    }\n  ]\n}"
+                                                               },
+                                                      "url":  "{{baseUrl}}/api/translators"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get all translators",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/translators"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get translator by id",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/translators/{{translatorId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Update translator",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"firstName\": \"Anna\",\n  \"lastName\": \"Ivanova Updated\",\n  \"ratePerPage\": 18.75,\n  \"languages\": [\n    {\n      \"languageId\": {{sourceLanguageId}},\n      \"proficiencyLevel\": \"NATIVE\"\n    }\n  ]\n}"
+                                                               },
+                                                      "url":  "{{baseUrl}}/api/translators/{{translatorId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Patch translator",
+                                      "request":  {
+                                                      "method":  "PATCH",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"ratePerPage\": 21.00\n}"
+                                                               },
+                                                      "url":  "{{baseUrl}}/api/translators/{{translatorId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Delete translator",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  "{{baseUrl}}/api/translators/{{translatorId}}"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Orders",
+                     "item":  [
+                                  {
+                                      "name":  "Create order",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status is 200\u0027, function () { pm.response.to.have.status(200); });",
+                                                                                    "var json = pm.response.json();",
+                                                                                    "if (json \u0026\u0026 json.id) { pm.collectionVariables.set(\u0027orderId\u0027, String(json.id)); }"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"title\": \"{{orderTitle}}\",\n  \"status\": \"NEW\",\n  \"sourceLanguageId\": {{sourceLanguageId}},\n  \"targetLanguageId\": {{targetLanguageId}},\n  \"clientId\": {{clientId}},\n  \"translatorId\": {{translatorId}},\n  \"documentIds\": []\n}"
+                                                               },
+                                                      "url":  "{{baseUrl}}/api/orders"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get order by id",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/orders/{{orderId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get order by title",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/orders?title={{orderTitle}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get all orders (paged, no filters)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/orders?page={{page}}\u0026size={{size}}\u0026sort={{sort}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get orders by status (paged)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/orders?status=NEW\u0026page={{page}}\u0026size={{size}}\u0026sort={{sort}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get orders by clientId (paged)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/orders?clientId={{clientId}}\u0026page={{page}}\u0026size={{size}}\u0026sort={{sort}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get orders by translatorId (paged)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/orders?translatorId={{translatorId}}\u0026page={{page}}\u0026size={{size}}\u0026sort={{sort}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Search orders JPQL",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/orders/search/jpql?status=NEW\u0026languageCode={{languageCode}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Search orders native",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/orders/search/native?status=NEW\u0026languageCode={{languageCode}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Update order",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"title\": \"{{orderTitle}}-UPDATED\",\n  \"status\": \"IN_PROGRESS\",\n  \"sourceLanguageId\": {{sourceLanguageId}},\n  \"targetLanguageId\": {{targetLanguageId}},\n  \"clientId\": {{clientId}},\n  \"translatorId\": {{translatorId}},\n  \"documentIds\": [{{documentId}}]\n}"
+                                                               },
+                                                      "url":  "{{baseUrl}}/api/orders/update/{{orderId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Patch order",
+                                      "request":  {
+                                                      "method":  "PATCH",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"status\": \"COMPLETED\"\n}"
+                                                               },
+                                                      "url":  "{{baseUrl}}/api/orders/patch/{{orderId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Delete order",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  "{{baseUrl}}/api/orders/delete/{{orderId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Start async order report",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status is 200\u0027, function () { pm.response.to.have.status(200); });",
+                                                                                    "var json = pm.response.json();",
+                                                                                    "if (json \u0026\u0026 json.taskId) { pm.collectionVariables.set(\u0027taskId\u0027, String(json.taskId)); }"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "url":  "{{baseUrl}}/api/orders/reports/async?status=NEW\u0026clientId={{clientId}}\u0026translatorId={{translatorId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get async order task status",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/orders/tasks/{{taskId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get async order task stats",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/orders/tasks/stats"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Documents",
+                     "item":  [
+                                  {
+                                      "name":  "Create document",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status is 200\u0027, function () { pm.response.to.have.status(200); });",
+                                                                                    "var json = pm.response.json();",
+                                                                                    "if (json \u0026\u0026 json.id) { pm.collectionVariables.set(\u0027documentId\u0027, String(json.id)); }"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"type\": \"PDF\",\n  \"pages\": 12,\n  \"orderId\": {{orderId}}\n}"
+                                                               },
+                                                      "url":  "{{baseUrl}}/api/documents"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get all documents",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/documents"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get documents by orderId",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/documents?orderId={{orderId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get document by id",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/documents/{{documentId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Update document",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"type\": \"DOCX\",\n  \"pages\": 15,\n  \"orderId\": {{orderId}}\n}"
+                                                               },
+                                                      "url":  "{{baseUrl}}/api/documents/{{documentId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Patch document",
+                                      "request":  {
+                                                      "method":  "PATCH",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"pages\": 20\n}"
+                                                               },
+                                                      "url":  "{{baseUrl}}/api/documents/{{documentId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Delete document",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  "{{baseUrl}}/api/documents/{{documentId}}"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Concurrency",
+                     "item":  [
+                                  {
+                                      "name":  "Demonstrate race condition (unsafe)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/concurrency/race-condition/unsafe"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Demonstrate race condition solution (atomic)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/concurrency/race-condition/atomic"
+                                                  }
+                                  }
+                              ]
+                 }
+             ]
+}

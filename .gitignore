@@ -38,6 +38,14 @@ build/
 
 ### VS Code ###
 .vscode/
+.jmeter/
 
 *.log
 META-INF
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+.env
+.env.*
+frontend/.env
+frontend/.env.*
