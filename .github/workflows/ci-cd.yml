@@ -136,19 +136,19 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-      HEALTHCHECK_URL: ${{ secrets.RENDER_HEALTHCHECK_URL }}
+      HEALTHCHECK_URL: https://translation-agency-api.onrender.com/actuator/health
 
     steps:
       - name: Skip deploy when Render secrets are missing
-        if: env.DEPLOY_HOOK_URL == '' || env.HEALTHCHECK_URL == ''
-        run: echo "Render deployment secrets are not configured. Skipping deploy job."
+        if: env.DEPLOY_HOOK_URL == ''
+        run: echo "Render deploy hook secret is not configured. Skipping deploy job."
 
       - name: Trigger PaaS deployment
-        if: env.DEPLOY_HOOK_URL != '' && env.HEALTHCHECK_URL != ''
+        if: env.DEPLOY_HOOK_URL != ''
         run: curl -fsSL -X POST "$DEPLOY_HOOK_URL"
 
       - name: Wait for remote healthcheck
-        if: env.DEPLOY_HOOK_URL != '' && env.HEALTHCHECK_URL != ''
+        if: env.DEPLOY_HOOK_URL != ''
         run: |
           for attempt in {1..30}; do
             if curl -fsSL "$HEALTHCHECK_URL" | grep -q '"status":"UP"'; then
