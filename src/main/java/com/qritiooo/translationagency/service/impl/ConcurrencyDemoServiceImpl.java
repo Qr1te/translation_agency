@@ -62,6 +62,13 @@ public class ConcurrencyDemoServiceImpl implements ConcurrencyDemoService {
     }
 
     void executeInParallel(Runnable incrementAction) {
+        if (Thread.currentThread().isInterrupted()) {
+            throw new IllegalStateException(
+                    "Concurrency demo interrupted",
+                    new InterruptedException("Thread was interrupted before execution")
+            );
+        }
+
         try (ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT)) {
             List<Callable<Void>> tasks = new ArrayList<>();
             for (int threadIndex = 0; threadIndex < THREAD_COUNT; threadIndex++) {
