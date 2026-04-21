@@ -38,7 +38,7 @@ build/
 
 ### VS Code ###
 .vscode/
-.jmeter/
+jmeter/
 
 *.log
 META-INF/

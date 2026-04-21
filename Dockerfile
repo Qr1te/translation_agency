@@ -24,9 +24,6 @@ COPY --from=build /app/target/translation_agency-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 8080
 
-ENV SERVER_PORT=8080
-ENV PORT=8080
-
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=5 \
   CMD curl --fail --silent "http://localhost:${SERVER_PORT:-${PORT:-8080}}/actuator/health" || exit 1
 
