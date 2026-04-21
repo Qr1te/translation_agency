@@ -107,7 +107,9 @@ public class ConcurrencyDemoServiceImpl implements ConcurrencyDemoService {
         private int value;
 
         private void increment() {
-            value++;
+            int currentValue = value;
+            Thread.yield();
+            value = currentValue + 1;
         }
 
         private int getValue() {

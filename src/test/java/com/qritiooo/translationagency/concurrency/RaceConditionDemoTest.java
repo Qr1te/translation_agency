@@ -1,7 +1,7 @@
 package com.qritiooo.translationagency.concurrency;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,12 +19,21 @@ class RaceConditionDemoTest {
     private static final int THREAD_COUNT = 50;
     private static final int INCREMENTS_PER_THREAD = 2_000;
     private static final int EXPECTED_TOTAL = THREAD_COUNT * INCREMENTS_PER_THREAD;
+    private static final int UNSAFE_ATTEMPTS = 5;
 
     @Test
     void shouldDemonstrateRaceConditionWithUnsafeCounter() throws Exception {
-        int actual = runUnsafeCounterScenario();
+        boolean raceConditionDetected = false;
 
-        assertNotEquals(EXPECTED_TOTAL, actual);
+        for (int attempt = 0; attempt < UNSAFE_ATTEMPTS; attempt++) {
+            int actual = runUnsafeCounterScenario();
+            if (actual != EXPECTED_TOTAL) {
+                raceConditionDetected = true;
+                break;
+            }
+        }
+
+        assertTrue(raceConditionDetected);
     }
 
     @Test
@@ -81,7 +90,9 @@ class RaceConditionDemoTest {
         private int value;
 
         private void increment() {
-            value++;
+            int currentValue = value;
+            Thread.yield();
+            value = currentValue + 1;
         }
 
         private int getValue() {
