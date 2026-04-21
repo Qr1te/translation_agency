@@ -132,18 +132,23 @@ jobs:
   deploy:
     needs:
       - docker-smoke
-    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && secrets.RENDER_DEPLOY_HOOK_URL != '' && secrets.RENDER_HEALTHCHECK_URL != ''
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    env:
+      DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+      HEALTHCHECK_URL: ${{ secrets.RENDER_HEALTHCHECK_URL }}
 
     steps:
+      - name: Skip deploy when Render secrets are missing
+        if: env.DEPLOY_HOOK_URL == '' || env.HEALTHCHECK_URL == ''
+        run: echo "Render deployment secrets are not configured. Skipping deploy job."
+
       - name: Trigger PaaS deployment
-        env:
-          DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        if: env.DEPLOY_HOOK_URL != '' && env.HEALTHCHECK_URL != ''
         run: curl -fsSL -X POST "$DEPLOY_HOOK_URL"
 
       - name: Wait for remote healthcheck
-        env:
-          HEALTHCHECK_URL: ${{ secrets.RENDER_HEALTHCHECK_URL }}
+        if: env.DEPLOY_HOOK_URL != '' && env.HEALTHCHECK_URL != ''
         run: |
           for attempt in {1..30}; do
             if curl -fsSL "$HEALTHCHECK_URL" | grep -q '"status":"UP"'; then
