@@ -1,5 +1,38 @@
 services:
   - type: web
+    runtime: static
+    name: translation-agency-frontend
+    plan: free
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    autoDeployTrigger: off
+    buildFilter:
+      paths:
+        - frontend/**
+      ignoredPaths:
+        - .mvn/**
+        - config/**
+        - Dockerfile
+        - jmeter/**
+        - mvnw
+        - pom.xml
+        - postman/**
+        - src/**
+    envVars:
+      - key: SKIP_INSTALL_DEPS
+        value: "true"
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: translation-agency-api
+          envVarKey: RENDER_EXTERNAL_URL
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  - type: web
     runtime: docker
     name: translation-agency-api
     plan: free
