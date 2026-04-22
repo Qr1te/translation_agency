@@ -36,6 +36,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceImplTest {
@@ -220,13 +221,20 @@ class OrderServiceImplTest {
         order.setTitle("Paged");
         order.setStatus(OrderStatus.NEW);
         PageRequest pageable = PageRequest.of(0, 10);
-        Page<Order> page = new PageImpl<>(List.of(order), pageable, 1);
+        PageRequest sortedPageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"));
+        Page<Order> page = new PageImpl<>(List.of(order), sortedPageable, 1);
         when(cacheManager.computeIfAbsent(any(CacheKey.class), any(Supplier.class)))
                 .thenAnswer(invocation -> {
                     Supplier<Page<OrderResponse>> supplier = invocation.getArgument(1);
                     return supplier.get();
                 });
-        when(orderRepository.findAllByFilters(OrderStatus.NEW, 1, 2, pageable)).thenReturn(page);
+        when(orderRepository.findByStatusAndClient_IdAndTranslator_Id(
+                OrderStatus.NEW,
+                1,
+                2,
+                sortedPageable
+        )).thenReturn(page);
+        when(orderRepository.findAllWithDetailsByIdIn(List.of(1))).thenReturn(List.of(order));
 
         Page<OrderResponse> result = orderService.getAll(OrderStatus.NEW, 1, 2, pageable);
 
