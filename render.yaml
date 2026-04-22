@@ -4,7 +4,7 @@ services:
     name: translation-agency-frontend
     rootDir: frontend
     buildCommand: npm ci && npm run build
-    staticPublishPath: ./frontend/dist
+    staticPublishPath: ./dist
     autoDeployTrigger: off
     buildFilter:
       paths:
