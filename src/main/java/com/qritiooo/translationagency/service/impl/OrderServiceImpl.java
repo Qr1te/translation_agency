@@ -24,10 +24,14 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -110,10 +114,30 @@ public class OrderServiceImpl implements OrderService {
                 pageable.getPageSize(),
                 pageable.getSort().toString()
         );
-        return cacheManager.computeIfAbsent(key, () ->
-                orderRepo.findAllByFilters(status, clientId, translatorId, pageable)
-                        .map(OrderMapper::toResponse)
-        );
+        Pageable sortedPageable = withDefaultSort(pageable);
+        return cacheManager.computeIfAbsent(key, () -> {
+            Page<Order> orderPage = findOrderPage(status, clientId, translatorId, sortedPageable);
+            if (orderPage.isEmpty()) {
+                return Page.empty(sortedPageable);
+            }
+
+            List<Integer> orderIds = orderPage.getContent().stream()
+                    .map(Order::getId)
+                    .toList();
+            var detailedOrdersById = orderRepo.findAllWithDetailsByIdIn(orderIds)
+                    .stream()
+                    .collect(java.util.stream.Collectors.toMap(
+                            Order::getId,
+                            Function.identity()
+                    ));
+
+            List<OrderResponse> responses = orderPage.getContent().stream()
+                    .map(order -> detailedOrdersById.getOrDefault(order.getId(), order))
+                    .map(OrderMapper::toResponse)
+                    .toList();
+
+            return new PageImpl<>(responses, sortedPageable, orderPage.getTotalElements());
+        });
     }
 
     @Override
@@ -276,5 +300,51 @@ public class OrderServiceImpl implements OrderService {
             case "CHINESE" -> "CN";
             default -> languageCode.trim().toUpperCase(Locale.ROOT);
         };
+    }
+
+    private Page<Order> findOrderPage(
+            OrderStatus status,
+            Integer clientId,
+            Integer translatorId,
+            Pageable pageable
+    ) {
+        if (status != null && clientId != null && translatorId != null) {
+            return orderRepo.findByStatusAndClient_IdAndTranslator_Id(
+                    status,
+                    clientId,
+                    translatorId,
+                    pageable
+            );
+        }
+        if (status != null && clientId != null) {
+            return orderRepo.findByStatusAndClient_Id(status, clientId, pageable);
+        }
+        if (status != null && translatorId != null) {
+            return orderRepo.findByStatusAndTranslator_Id(status, translatorId, pageable);
+        }
+        if (clientId != null && translatorId != null) {
+            return orderRepo.findByClient_IdAndTranslator_Id(clientId, translatorId, pageable);
+        }
+        if (status != null) {
+            return orderRepo.findByStatus(status, pageable);
+        }
+        if (clientId != null) {
+            return orderRepo.findByClient_Id(clientId, pageable);
+        }
+        if (translatorId != null) {
+            return orderRepo.findByTranslator_Id(translatorId, pageable);
+        }
+        return orderRepo.findAll(pageable);
+    }
+
+    private Pageable withDefaultSort(Pageable pageable) {
+        if (pageable.getSort().isSorted()) {
+            return pageable;
+        }
+        return PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Direction.ASC, "id")
+        );
     }
 }

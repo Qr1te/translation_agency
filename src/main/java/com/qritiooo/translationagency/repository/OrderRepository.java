@@ -24,14 +24,45 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     @EntityGraph(attributePaths = {"client", "translator", "documents"})
     List<Order> findByStatus(OrderStatus status);
 
+    Page<Order> findByStatus(OrderStatus status, Pageable pageable);
+
     @EntityGraph(attributePaths = {"client", "translator", "documents"})
     List<Order> findByClient_Id(Integer clientId);
+
+    Page<Order> findByClient_Id(Integer clientId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"client", "translator", "documents"})
     List<Order> findByTranslator_Id(Integer translatorId);
 
+    Page<Order> findByTranslator_Id(Integer translatorId, Pageable pageable);
+
     @EntityGraph(attributePaths = {"client", "translator", "documents"})
     List<Order> findByTitle(String title);
+
+    Page<Order> findByStatusAndClient_Id(
+            OrderStatus status,
+            Integer clientId,
+            Pageable pageable
+    );
+
+    Page<Order> findByStatusAndTranslator_Id(
+            OrderStatus status,
+            Integer translatorId,
+            Pageable pageable
+    );
+
+    Page<Order> findByClient_IdAndTranslator_Id(
+            Integer clientId,
+            Integer translatorId,
+            Pageable pageable
+    );
+
+    Page<Order> findByStatusAndClient_IdAndTranslator_Id(
+            OrderStatus status,
+            Integer clientId,
+            Integer translatorId,
+            Pageable pageable
+    );
 
     @EntityGraph(attributePaths = {
             "client",
