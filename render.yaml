@@ -2,10 +2,9 @@ services:
   - type: web
     runtime: static
     name: translation-agency-frontend
-    plan: free
     rootDir: frontend
     buildCommand: npm ci && npm run build
-    staticPublishPath: ./dist
+    staticPublishPath: ./frontend/dist
     autoDeployTrigger: off
     buildFilter:
       paths:
