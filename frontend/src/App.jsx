@@ -74,24 +74,29 @@ function App() {
     async function loadReferenceData() {
       setLoadingReferenceData(true)
       try {
-        const [nextClients, nextTranslators, nextLanguages, nextDocuments] = await Promise.all([
-          apiRequest('/api/clients'),
-          apiRequest('/api/translators'),
-          apiRequest('/api/languages'),
-          apiRequest('/api/documents'),
-        ])
+        const requests = [
+          { path: '/api/clients', setter: setClients },
+          { path: '/api/translators', setter: setTranslators },
+          { path: '/api/languages', setter: setLanguages },
+          { path: '/api/documents', setter: setDocuments },
+        ]
 
-        if (cancelled) {
-          return
-        }
+        const results = await Promise.allSettled(
+          requests.map(async ({ path, setter }) => {
+            const nextData = await apiRequest(path)
 
-        setClients(nextClients ?? [])
-        setTranslators(nextTranslators ?? [])
-        setLanguages(nextLanguages ?? [])
-        setDocuments(nextDocuments ?? [])
-      } catch (error) {
+            if (!cancelled) {
+              setter(nextData ?? [])
+            }
+          }),
+        )
+
         if (!cancelled) {
-          setBanner({ type: 'error', text: error.message })
+          const failedRequest = results.find((result) => result.status === 'rejected')
+
+          if (failedRequest) {
+            setBanner({ type: 'error', text: failedRequest.reason.message })
+          }
         }
       } finally {
         if (!cancelled) {

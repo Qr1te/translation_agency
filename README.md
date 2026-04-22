@@ -80,15 +80,29 @@ Copy-Item .env.example .env
 docker build -t translation-agency .
 ```
 
-Запуск backend + PostgreSQL через Docker Compose:
+Запуск всей локальной среды через Docker Compose
+база + backend + frontend одной командой:
 
 ```powershell
 docker compose up --build
 ```
 
 После старта приложение доступно на:
+- `http://localhost:5173` — frontend
 - `http://localhost:8080`
 - healthcheck: `http://localhost:8080/actuator/health`
+
+Если нужно запустить всё в фоне:
+
+```powershell
+docker compose up --build -d
+```
+
+Остановить всё:
+
+```powershell
+docker compose down
+```
 
 ## Frontend Env
 
