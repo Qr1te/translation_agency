@@ -13,25 +13,27 @@
 
 .hero-panel {
   position: relative;
+  isolation: isolate;
   overflow: hidden;
   padding: 32px;
   border-radius: 32px;
   background:
-    linear-gradient(125deg, rgba(247, 168, 83, 0.96), rgba(26, 111, 103, 0.95)),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent);
+    linear-gradient(95deg, rgba(55, 30, 10, 0.26) 0%, rgba(55, 30, 10, 0.14) 28%, rgba(0, 0, 0, 0.02) 54%),
+    linear-gradient(125deg, rgba(245, 153, 53, 0.62), rgba(28, 129, 122, 0.54)),
+    url('/translation-bureau-hero.svg') center center / cover no-repeat;
   color: #fffaf3;
-  box-shadow: 0 28px 60px rgba(55, 72, 66, 0.18);
+  border: 1px solid rgba(255, 247, 230, 0.18);
+  box-shadow: 0 28px 60px rgba(55, 72, 66, 0.2);
 }
 
 .hero-panel::after {
   content: '';
   position: absolute;
-  inset: auto -120px -140px auto;
-  width: 320px;
-  height: 320px;
-  border-radius: 50%;
-  background: rgba(255, 247, 224, 0.16);
-  filter: blur(3px);
+  inset: 0;
+  background:
+    radial-gradient(circle at 84% 78%, rgba(255, 247, 224, 0.22), transparent 22%),
+    linear-gradient(90deg, rgba(26, 14, 4, 0.28) 0%, rgba(26, 14, 4, 0.11) 32%, rgba(26, 14, 4, 0) 58%);
+  pointer-events: none;
 }
 
 .hero-copy {
@@ -39,6 +41,7 @@
   z-index: 1;
   display: grid;
   gap: 16px;
+  max-width: 52rem;
 }
 
 .eyebrow {
@@ -58,9 +61,10 @@
 
 .hero-copy p {
   margin: 0;
-  max-width: 62rem;
-  font-size: 1.04rem;
-  color: rgba(255, 248, 235, 0.92);
+  max-width: 46rem;
+  font-size: 1.06rem;
+  line-height: 1.7;
+  color: rgba(255, 248, 235, 0.94);
 }
 
 .hero-actions {
@@ -89,7 +93,9 @@
   z-index: 1;
   padding: 18px 20px;
   border-radius: 22px;
-  background: rgba(255, 250, 243, 0.24);
+  background: rgba(255, 250, 243, 0.16);
+  border: 1px solid rgba(255, 249, 236, 0.16);
+  backdrop-filter: blur(10px);
 }
 
 .stat-card strong {

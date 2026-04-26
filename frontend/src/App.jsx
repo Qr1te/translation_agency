@@ -569,26 +569,27 @@ function App() {
     <div className="app-shell">
       <header className="hero-panel">
         <div className="hero-copy">
-          <div className="eyebrow">Бюро переводов</div>
-          <h1>Удобная работа с клиентами, заказами и документами</h1>
+          <div className="eyebrow">Бюро переводов полного цикла</div>
+          <h1>Профессиональные переводы документов, договоров и деловой переписки</h1>
           <p>
-            Здесь удобно вести клиентов, заказы, документы и переводчиков в одном
-            месте. Нужную запись можно быстро найти, открыть и изменить без
-            лишних шагов.
+            Рабочая панель бюро переводов для ежедневной операционной работы:
+            здесь удобно принимать заявки, вести клиентов, подбирать
+            переводчиков по языковой паре и контролировать каждый документ от
+            первого обращения до сдачи готового перевода.
           </p>
           <div className="hero-actions">
             <button className="button primary" type="button" onClick={() => queueRefresh('Список обновлён.')} disabled={loading}>
               Обновить данные
             </button>
             <button className="button secondary" type="button" onClick={() => startTransition(() => setActiveSection('orders'))}>
-              Перейти к заказам
+              Открыть заказы
             </button>
           </div>
           <div className="stats-grid">
-            <div className="stat-card"><strong>{clients.length}</strong><span>клиентов в списке</span></div>
-            <div className="stat-card"><strong>{translators.length}</strong><span>переводчиков в списке</span></div>
-            <div className="stat-card"><strong>{ordersPage.totalElements}</strong><span>заказов найдено</span></div>
-            <div className="stat-card"><strong>{documents.length}</strong><span>документов в списке</span></div>
+            <div className="stat-card"><strong>{clients.length}</strong><span>клиентов в базе</span></div>
+            <div className="stat-card"><strong>{translators.length}</strong><span>переводчиков в базе</span></div>
+            <div className="stat-card"><strong>{ordersPage.totalElements}</strong><span>заказов в системе</span></div>
+            <div className="stat-card"><strong>{documents.length}</strong><span>документов в системе</span></div>
           </div>
         </div>
       </header>
@@ -610,26 +611,28 @@ function App() {
 
       <section className="insights-grid">
         <article className="insight-card">
-          <h2>Клиенты и их заказы</h2>
+          <h2>Клиенты и история обращений</h2>
           <p>
             Сейчас {clients.filter((client) => getOrdersForClient(client.id).length > 0).length}{' '}
-            клиентов уже связаны с заказами из текущего списка.
+            клиентов уже связаны с заказами в базе. Это помогает быстро видеть
+            повторные обращения и не терять историю работы по каждому клиенту.
           </p>
         </article>
         <article className="insight-card">
-          <h2>Языки переводчиков</h2>
+          <h2>Языковые пары и исполнители</h2>
           <p>
-            Сейчас видно{' '}
+            Сейчас доступно{' '}
             {translators.reduce((total, translator) => total + translator.languages.length, 0)}{' '}
-            записей о языках, которыми владеют переводчики.
+            записей о языках и уровнях владения. Так менеджеру проще подобрать
+            переводчика под тематику проекта, срок и нужную языковую пару.
           </p>
         </article>
         <article className="insight-card">
-          <h2>Поиск и отбор</h2>
+          <h2>Очередь заказов под контролем</h2>
           <p>
             {currentOrderFilterSummary.length > 0
-              ? `Сейчас включены условия: ${currentOrderFilterSummary.join(', ')}.`
-              : 'Сейчас показываются все заказы. Ниже можно сузить список.'}
+              ? `Сейчас включены фильтры: ${currentOrderFilterSummary.join(', ')}. Так удобнее быстро проверить нужный проект или конкретного исполнителя.`
+              : 'По умолчанию отображается вся очередь заказов. Ниже можно быстро отобрать проекты по клиенту, переводчику или текущему статусу.'}
           </p>
         </article>
       </section>
@@ -638,7 +641,7 @@ function App() {
         <div className="section-header">
           <div>
             <h2>{SECTION_OPTIONS.find((section) => section.id === activeSection)?.label}</h2>
-            <p>{pendingAction || (loading ? 'Загружаем данные...' : 'Можно работать дальше.')}</p>
+            <p>{pendingAction || (loading ? 'Обновляем рабочие данные...' : 'Данные синхронизированы, можно продолжать работу.')}</p>
           </div>
           <div className="section-actions">
             {loading ? <div className="spinner-line">Загружаем данные</div> : null}

@@ -9,7 +9,5 @@ frontend/dist
 frontend/.vite
 jmeter
 postman
-app.err
-app.out
 .env
 frontend/.env
