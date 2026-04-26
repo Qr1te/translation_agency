@@ -24,6 +24,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 @ExtendWith(MockitoExtension.class)
 class DocumentServiceImplTest {
@@ -115,6 +119,7 @@ class DocumentServiceImplTest {
     @Test
     @SuppressWarnings("unchecked")
     void getAll_ShouldFilterByOrderId_WhenProvided() {
+        PageRequest pageable = PageRequest.of(0, 5, Sort.by("id"));
         Document withOrder = new Document();
         withOrder.setId(10);
         withOrder.setType("Book");
@@ -122,34 +127,39 @@ class DocumentServiceImplTest {
         Order order = new Order();
         order.setId(55);
         withOrder.setOrder(order);
-        when(documentRepository.findByOrder_Id(55)).thenReturn(List.of(withOrder));
+        when(documentRepository.findByOrder_Id(55, pageable)).thenReturn(
+                new PageImpl<>(List.of(withOrder), pageable, 1)
+        );
         when(cacheManager.computeIfAbsent(any(CacheKey.class), any(Supplier.class)))
                 .thenAnswer(invocation -> {
-                    Supplier<List<DocumentResponse>> supplier = invocation.getArgument(1);
+                    Supplier<Page<DocumentResponse>> supplier = invocation.getArgument(1);
                     return supplier.get();
                 });
 
-        List<DocumentResponse> result = documentService.getAll(55);
+        Page<DocumentResponse> result = documentService.getAll(55, pageable);
 
-        assertEquals(1, result.size());
-        assertEquals(55, result.getFirst().getOrderId());
+        assertEquals(1, result.getContent().size());
+        assertEquals(55, result.getContent().getFirst().getOrderId());
     }
 
     @Test
     @SuppressWarnings("unchecked")
     void getAll_ShouldReturnAll_WhenOrderIdIsNull() {
+        PageRequest pageable = PageRequest.of(0, 5, Sort.by("id"));
         Document first = new Document(1, "A", 1, null);
         Document second = new Document(2, "B", 2, null);
-        when(documentRepository.findAll()).thenReturn(List.of(first, second));
+        when(documentRepository.findAll(pageable)).thenReturn(
+                new PageImpl<>(List.of(first, second), pageable, 2)
+        );
         when(cacheManager.computeIfAbsent(any(CacheKey.class), any(Supplier.class)))
                 .thenAnswer(invocation -> {
-                    Supplier<List<DocumentResponse>> supplier = invocation.getArgument(1);
+                    Supplier<Page<DocumentResponse>> supplier = invocation.getArgument(1);
                     return supplier.get();
                 });
 
-        List<DocumentResponse> result = documentService.getAll(null);
+        Page<DocumentResponse> result = documentService.getAll(null, pageable);
 
-        assertEquals(2, result.size());
+        assertEquals(2, result.getContent().size());
     }
 
     @Test

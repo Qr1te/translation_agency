@@ -12,6 +12,10 @@ import com.qritiooo.translationagency.repository.OrderRepository;
 import com.qritiooo.translationagency.service.DocumentService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -77,13 +81,22 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public List<DocumentResponse> getAll(Integer orderId) {
-        CacheKey key = new CacheKey(Document.class, "getAll", orderId);
+    @Transactional(readOnly = true)
+    public Page<DocumentResponse> getAll(Integer orderId, Pageable pageable) {
+        Pageable sortedPageable = withDefaultSort(pageable);
+        CacheKey key = new CacheKey(
+                Document.class,
+                "getAll",
+                orderId,
+                sortedPageable.getPageNumber(),
+                sortedPageable.getPageSize(),
+                sortedPageable.getSort().toString()
+        );
         return cacheManager.computeIfAbsent(key, () -> {
-            var list = (orderId != null)
-                    ? docRepo.findByOrder_Id(orderId)
-                    : docRepo.findAll();
-            return list.stream().map(DocumentMapper::toResponse).toList();
+            Page<Document> page = (orderId != null)
+                    ? docRepo.findByOrder_Id(orderId, sortedPageable)
+                    : docRepo.findAll(sortedPageable);
+            return page.map(DocumentMapper::toResponse);
         });
     }
 
@@ -114,6 +127,17 @@ public class DocumentServiceImpl implements DocumentService {
         if (!newOrder.getDocuments().contains(document)) {
             newOrder.getDocuments().add(document);
         }
+    }
+
+    private Pageable withDefaultSort(Pageable pageable) {
+        if (pageable.getSort().isSorted()) {
+            return pageable;
+        }
+        return PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Direction.ASC, "id")
+        );
     }
 
 }

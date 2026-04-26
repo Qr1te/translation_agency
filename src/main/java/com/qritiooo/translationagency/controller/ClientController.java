@@ -11,6 +11,9 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -111,8 +114,10 @@ public class ClientController {
     @GetMapping
     @Operation(summary = "Get all clients")
     @ApiResponse(responseCode = "200", description = "Clients returned")
-    public ResponseEntity<List<ClientResponse>> getAll() {
-        return ResponseEntity.ok(service.getAll());
+    public ResponseEntity<PagedClientResponse> getAll(
+            @PageableDefault(sort = "id") Pageable pageable
+    ) {
+        return ResponseEntity.ok(toPageResponse(service.getAll(pageable)));
     }
 
     @DeleteMapping("/{id}")
@@ -124,5 +129,31 @@ public class ClientController {
     public ResponseEntity<Void> delete(@Positive @PathVariable Integer id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private PagedClientResponse toPageResponse(Page<ClientResponse> page) {
+        return new PagedClientResponse(
+                page.getContent(),
+                new PageMeta(
+                        page.getSize(),
+                        page.getNumber(),
+                        page.getTotalElements(),
+                        page.getTotalPages()
+                )
+        );
+    }
+
+    public static record PagedClientResponse(
+            List<ClientResponse> content,
+            PageMeta page
+    ) {
+    }
+
+    public static record PageMeta(
+            int size,
+            int number,
+            long totalElements,
+            int totalPages
+    ) {
     }
 }

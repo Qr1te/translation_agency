@@ -36,6 +36,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 @ExtendWith(MockitoExtension.class)
 class ClientServiceImplTest {
@@ -256,17 +260,20 @@ class ClientServiceImplTest {
     @Test
     @SuppressWarnings("unchecked")
     void getAll_ShouldUseCacheManagerSupplier() {
+        PageRequest pageable = PageRequest.of(0, 5, Sort.by("id"));
         Client c1 = new Client(1, "A", "B", "a@test.com", List.of());
         Client c2 = new Client(2, "C", "D", "c@test.com", List.of());
         when(cacheManager.computeIfAbsent(any(CacheKey.class), any(Supplier.class))).thenAnswer(invocation -> {
-            Supplier<List<ClientResponse>> supplier = invocation.getArgument(1);
+            Supplier<Page<ClientResponse>> supplier = invocation.getArgument(1);
             return supplier.get();
         });
-        when(clientRepository.findAll()).thenReturn(List.of(c1, c2));
+        when(clientRepository.findAll(pageable)).thenReturn(
+                new PageImpl<>(List.of(c1, c2), pageable, 2)
+        );
 
-        List<ClientResponse> result = clientService.getAll();
+        Page<ClientResponse> result = clientService.getAll(pageable);
 
-        assertEquals(2, result.size());
+        assertEquals(2, result.getContent().size());
         verify(cacheManager).computeIfAbsent(any(CacheKey.class), any(Supplier.class));
     }
 

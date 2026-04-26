@@ -3,10 +3,6 @@
   line-height: 1.5;
   font-weight: 400;
   color: #163234;
-  background:
-    radial-gradient(circle at top left, rgba(255, 191, 105, 0.28), transparent 34%),
-    radial-gradient(circle at top right, rgba(41, 133, 117, 0.24), transparent 28%),
-    linear-gradient(180deg, #f9f1df 0%, #f5efe7 50%, #eef5f2 100%);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -24,6 +20,10 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(247, 250, 253, 0.9)),
+    url('/translation-background.svg') center top / cover no-repeat fixed;
+  background-color: #eff5fb;
 }
 
 button,

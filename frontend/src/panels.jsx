@@ -17,10 +17,13 @@ export function ClientsPanel(props) {
     clientQuery,
     setClientQuery,
     clients,
+    clientsPage,
+    setClientFilters,
     getOrdersForClient,
     onEdit,
     onDelete,
     pendingAction,
+    loading,
   } = props
 
   return (
@@ -81,6 +84,45 @@ export function ClientsPanel(props) {
               placeholder="Введите имя или почту"
             />
           </label>
+        </div>
+
+        <div className="pagination">
+          <div className="mini-note">
+            Страница {clientsPage.number + 1} из {Math.max(clientsPage.totalPages, 1)} - всего
+            клиентов: {clientsPage.totalElements}
+          </div>
+          <div className="card-actions">
+            <button
+              className="icon-button"
+              type="button"
+              disabled={clientsPage.number === 0 || loading}
+              onClick={() =>
+                setClientFilters((current) => ({
+                  ...current,
+                  page: Math.max(current.page - 1, 0),
+                }))
+              }
+            >
+              Назад
+            </button>
+            <button
+              className="icon-button"
+              type="button"
+              disabled={
+                clientsPage.totalPages === 0 ||
+                clientsPage.number >= clientsPage.totalPages - 1 ||
+                loading
+              }
+              onClick={() =>
+                setClientFilters((current) => ({
+                  ...current,
+                  page: current.page + 1,
+                }))
+              }
+            >
+              Далее
+            </button>
+          </div>
         </div>
 
         <div className="cards-grid">
@@ -248,7 +290,6 @@ export function LanguagesPanel(props) {
                   <h3>{language.name}</h3>
                   <span className="badge">{language.code.toUpperCase()}</span>
                 </div>
-                <div className="mini-note">ID: {language.id}</div>
                 <div className="card-actions">
                   <button className="icon-button" type="button" onClick={() => onEdit(language)}>
                     Изменить
@@ -280,6 +321,8 @@ export function TranslatorsPanel(props) {
     translatorQuery,
     setTranslatorQuery,
     translators,
+    translatorsPage,
+    setTranslatorFilters,
     languages,
     getOrdersForTranslator,
     onEdit,
@@ -288,6 +331,7 @@ export function TranslatorsPanel(props) {
     onLanguageAdd,
     onLanguageRemove,
     pendingAction,
+    loading,
   } = props
 
   return (
@@ -399,6 +443,45 @@ export function TranslatorsPanel(props) {
               placeholder="Введите имя, язык или уровень"
             />
           </label>
+        </div>
+
+        <div className="pagination">
+          <div className="mini-note">
+            Страница {translatorsPage.number + 1} из {Math.max(translatorsPage.totalPages, 1)} -{' '}
+            всего переводчиков: {translatorsPage.totalElements}
+          </div>
+          <div className="card-actions">
+            <button
+              className="icon-button"
+              type="button"
+              disabled={translatorsPage.number === 0 || loading}
+              onClick={() =>
+                setTranslatorFilters((current) => ({
+                  ...current,
+                  page: Math.max(current.page - 1, 0),
+                }))
+              }
+            >
+              Назад
+            </button>
+            <button
+              className="icon-button"
+              type="button"
+              disabled={
+                translatorsPage.totalPages === 0 ||
+                translatorsPage.number >= translatorsPage.totalPages - 1 ||
+                loading
+              }
+              onClick={() =>
+                setTranslatorFilters((current) => ({
+                  ...current,
+                  page: current.page + 1,
+                }))
+              }
+            >
+              Далее
+            </button>
+          </div>
         </div>
 
         <div className="cards-grid">
@@ -808,11 +891,14 @@ export function DocumentsPanel(props) {
     documentFilterOrderId,
     setDocumentFilterOrderId,
     documents,
+    documentsPage,
+    setDocumentFilters,
     orders,
     getOrderTitle,
     onEdit,
     onDelete,
     pendingAction,
+    loading,
   } = props
 
   return (
@@ -884,7 +970,13 @@ export function DocumentsPanel(props) {
             <span>Показать по заказу</span>
             <select
               value={documentFilterOrderId}
-              onChange={(event) => setDocumentFilterOrderId(event.target.value)}
+              onChange={(event) => {
+                setDocumentFilterOrderId(event.target.value)
+                setDocumentFilters((current) => ({
+                  ...current,
+                  page: 0,
+                }))
+              }}
             >
               <option value="">Все заказы</option>
               {orders.map((order) => (
@@ -894,6 +986,45 @@ export function DocumentsPanel(props) {
               ))}
             </select>
           </label>
+        </div>
+
+        <div className="pagination">
+          <div className="mini-note">
+            Страница {documentsPage.number + 1} из {Math.max(documentsPage.totalPages, 1)} -{' '}
+            всего документов: {documentsPage.totalElements}
+          </div>
+          <div className="card-actions">
+            <button
+              className="icon-button"
+              type="button"
+              disabled={documentsPage.number === 0 || loading}
+              onClick={() =>
+                setDocumentFilters((current) => ({
+                  ...current,
+                  page: Math.max(current.page - 1, 0),
+                }))
+              }
+            >
+              Назад
+            </button>
+            <button
+              className="icon-button"
+              type="button"
+              disabled={
+                documentsPage.totalPages === 0 ||
+                documentsPage.number >= documentsPage.totalPages - 1 ||
+                loading
+              }
+              onClick={() =>
+                setDocumentFilters((current) => ({
+                  ...current,
+                  page: current.page + 1,
+                }))
+              }
+            >
+              Далее
+            </button>
+          </div>
         </div>
 
         <div className="cards-grid">

@@ -29,11 +29,33 @@ function App() {
   const [reloadToken, setReloadToken] = useState(0)
 
   const [clients, setClients] = useState([])
+  const [pagedClients, setPagedClients] = useState([])
   const [translators, setTranslators] = useState([])
+  const [pagedTranslators, setPagedTranslators] = useState([])
   const [languages, setLanguages] = useState([])
   const [pagedLanguages, setPagedLanguages] = useState([])
   const [documents, setDocuments] = useState([])
+  const [pagedDocuments, setPagedDocuments] = useState([])
+  const [orderOptions, setOrderOptions] = useState([])
   const [orders, setOrders] = useState([])
+  const [clientsPage, setClientsPage] = useState({
+    size: 8,
+    number: 0,
+    totalElements: 0,
+    totalPages: 0,
+  })
+  const [translatorsPage, setTranslatorsPage] = useState({
+    size: 8,
+    number: 0,
+    totalElements: 0,
+    totalPages: 0,
+  })
+  const [documentsPage, setDocumentsPage] = useState({
+    size: 8,
+    number: 0,
+    totalElements: 0,
+    totalPages: 0,
+  })
   const [ordersPage, setOrdersPage] = useState({
     size: 12,
     number: 0,
@@ -72,10 +94,25 @@ function App() {
     page: 0,
     size: 12,
   })
+  const [clientFilters, setClientFilters] = useState({
+    page: 0,
+    size: 8,
+  })
+  const [translatorFilters, setTranslatorFilters] = useState({
+    page: 0,
+    size: 8,
+  })
+  const [documentFilters, setDocumentFilters] = useState({
+    page: 0,
+    size: 8,
+  })
   const [languageFilters, setLanguageFilters] = useState({
     page: 0,
     size: 8,
   })
+  const [loadingClients, setLoadingClients] = useState(true)
+  const [loadingTranslators, setLoadingTranslators] = useState(true)
+  const [loadingDocuments, setLoadingDocuments] = useState(true)
   const [loadingLanguages, setLoadingLanguages] = useState(true)
 
   const deferredClientQuery = useDeferredValue(clientQuery)
@@ -84,7 +121,13 @@ function App() {
   const deferredLanguageQuery = useDeferredValue(languageQuery)
   const deferredOrderQuery = useDeferredValue(orderQuery)
 
-  const loading = loadingReferenceData || loadingOrders
+  const loading =
+    loadingReferenceData ||
+    loadingClients ||
+    loadingTranslators ||
+    loadingDocuments ||
+    loadingLanguages ||
+    loadingOrders
 
   useEffect(() => {
     let cancelled = false
@@ -93,13 +136,26 @@ function App() {
       setLoadingReferenceData(true)
       try {
         const requests = [
-          { path: '/api/clients', setter: setClients },
-          { path: '/api/translators', setter: setTranslators },
+          {
+            path: `/api/clients${buildQuery({ size: 500, sort: 'id,asc' })}`,
+            setter: setClients,
+          },
+          {
+            path: `/api/translators${buildQuery({ size: 500, sort: 'id,asc' })}`,
+            setter: setTranslators,
+          },
           {
             path: `/api/languages${buildQuery({ size: 500, sort: 'id,asc' })}`,
             setter: setLanguages,
           },
-          { path: '/api/documents', setter: setDocuments },
+          {
+            path: `/api/documents${buildQuery({ size: 500, sort: 'id,asc' })}`,
+            setter: setDocuments,
+          },
+          {
+            path: `/api/orders${buildQuery({ size: 500, sort: 'id,asc' })}`,
+            setter: setOrderOptions,
+          },
         ]
 
         const results = await Promise.allSettled(
@@ -136,6 +192,118 @@ function App() {
   useEffect(() => {
     let cancelled = false
 
+    async function loadClientsPage() {
+      setLoadingClients(true)
+
+      try {
+        const clientQueryString = buildQuery({
+          page: clientFilters.page,
+          size: clientFilters.size,
+        })
+
+        const nextClients = await apiRequest(`/api/clients${clientQueryString}`)
+
+        if (cancelled) {
+          return
+        }
+
+        const nextPage = nextClients?.page ?? {
+          size: 8,
+          number: 0,
+          totalElements: 0,
+          totalPages: 0,
+        }
+
+        if (
+          clientFilters.page > 0 &&
+          (nextPage.totalPages === 0 || nextPage.number >= nextPage.totalPages)
+        ) {
+          setClientFilters((current) => ({
+            ...current,
+            page: Math.max(nextPage.totalPages - 1, 0),
+          }))
+          return
+        }
+
+        setPagedClients(nextClients?.content ?? [])
+        setClientsPage(nextPage)
+      } catch (error) {
+        if (!cancelled) {
+          setBanner({ type: 'error', text: error.message })
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingClients(false)
+        }
+      }
+    }
+
+    loadClientsPage()
+
+    return () => {
+      cancelled = true
+    }
+  }, [clientFilters, reloadToken])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadTranslatorsPage() {
+      setLoadingTranslators(true)
+
+      try {
+        const translatorQueryString = buildQuery({
+          page: translatorFilters.page,
+          size: translatorFilters.size,
+        })
+
+        const nextTranslators = await apiRequest(`/api/translators${translatorQueryString}`)
+
+        if (cancelled) {
+          return
+        }
+
+        const nextPage = nextTranslators?.page ?? {
+          size: 8,
+          number: 0,
+          totalElements: 0,
+          totalPages: 0,
+        }
+
+        if (
+          translatorFilters.page > 0 &&
+          (nextPage.totalPages === 0 || nextPage.number >= nextPage.totalPages)
+        ) {
+          setTranslatorFilters((current) => ({
+            ...current,
+            page: Math.max(nextPage.totalPages - 1, 0),
+          }))
+          return
+        }
+
+        setPagedTranslators(nextTranslators?.content ?? [])
+        setTranslatorsPage(nextPage)
+      } catch (error) {
+        if (!cancelled) {
+          setBanner({ type: 'error', text: error.message })
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingTranslators(false)
+        }
+      }
+    }
+
+    loadTranslatorsPage()
+
+    return () => {
+      cancelled = true
+    }
+  }, [translatorFilters, reloadToken])
+
+  useEffect(() => {
+    let cancelled = false
+
     async function loadOrders() {
       setLoadingOrders(true)
 
@@ -154,8 +322,26 @@ function App() {
           return
         }
 
+        const nextPage = nextOrders?.page ?? {
+          size: 12,
+          number: 0,
+          totalElements: 0,
+          totalPages: 0,
+        }
+
+        if (
+          orderFilters.page > 0 &&
+          (nextPage.totalPages === 0 || nextPage.number >= nextPage.totalPages)
+        ) {
+          setOrderFilters((current) => ({
+            ...current,
+            page: Math.max(nextPage.totalPages - 1, 0),
+          }))
+          return
+        }
+
         setOrders(nextOrders?.content ?? [])
-        setOrdersPage(nextOrders?.page ?? { size: 12, number: 0, totalElements: 0, totalPages: 0 })
+        setOrdersPage(nextPage)
       } catch (error) {
         if (!cancelled) {
           setBanner({ type: 'error', text: error.message })
@@ -173,6 +359,63 @@ function App() {
       cancelled = true
     }
   }, [orderFilters, reloadToken])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadDocumentsPage() {
+      setLoadingDocuments(true)
+
+      try {
+        const documentQueryString = buildQuery({
+          orderId: documentFilterOrderId,
+          page: documentFilters.page,
+          size: documentFilters.size,
+        })
+
+        const nextDocuments = await apiRequest(`/api/documents${documentQueryString}`)
+
+        if (cancelled) {
+          return
+        }
+
+        const nextPage = nextDocuments?.page ?? {
+          size: 8,
+          number: 0,
+          totalElements: 0,
+          totalPages: 0,
+        }
+
+        if (
+          documentFilters.page > 0 &&
+          (nextPage.totalPages === 0 || nextPage.number >= nextPage.totalPages)
+        ) {
+          setDocumentFilters((current) => ({
+            ...current,
+            page: Math.max(nextPage.totalPages - 1, 0),
+          }))
+          return
+        }
+
+        setPagedDocuments(nextDocuments?.content ?? [])
+        setDocumentsPage(nextPage)
+      } catch (error) {
+        if (!cancelled) {
+          setBanner({ type: 'error', text: error.message })
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingDocuments(false)
+        }
+      }
+    }
+
+    loadDocumentsPage()
+
+    return () => {
+      cancelled = true
+    }
+  }, [documentFilterOrderId, documentFilters, reloadToken])
 
   useEffect(() => {
     let cancelled = false
@@ -200,13 +443,12 @@ function App() {
         }
 
         if (
-          nextPage.totalPages > 0 &&
-          nextPage.number >= nextPage.totalPages &&
-          languageFilters.page > 0
+          languageFilters.page > 0 &&
+          (nextPage.totalPages === 0 || nextPage.number >= nextPage.totalPages)
         ) {
           setLanguageFilters((current) => ({
             ...current,
-            page: nextPage.totalPages - 1,
+            page: Math.max(nextPage.totalPages - 1, 0),
           }))
           return
         }
@@ -254,23 +496,24 @@ function App() {
   }
 
   function getOrderTitle(orderId) {
-    const order = orders.find((item) => item.id === orderId)
+    const order = orderOptions.find((item) => item.id === orderId)
     return order ? order.title : `Заказ #${orderId}`
   }
 
-  const getOrdersForClient = (clientId) => orders.filter((order) => order.clientId === clientId)
+  const getOrdersForClient = (clientId) =>
+    orderOptions.filter((order) => order.clientId === clientId)
   const getOrdersForTranslator = (translatorId) =>
-    orders.filter((order) => order.translatorId === translatorId)
+    orderOptions.filter((order) => order.translatorId === translatorId)
   const getDocumentsForOrder = (orderId) =>
     documents.filter((document) => document.orderId === orderId)
 
-  const visibleClients = clients.filter((client) =>
+  const visibleClients = pagedClients.filter((client) =>
     `${client.firstName} ${client.lastName} ${client.email}`
       .toLowerCase()
       .includes(deferredClientQuery.trim().toLowerCase()),
   )
 
-  const visibleTranslators = translators.filter((translator) => {
+  const visibleTranslators = pagedTranslators.filter((translator) => {
     const languageBlob = translator.languages
       .map((item) => `${item.code} ${item.name} ${item.proficiencyLevel}`)
       .join(' ')
@@ -292,14 +535,7 @@ function App() {
       .includes(deferredLanguageQuery.trim().toLowerCase()),
   )
 
-  const visibleDocuments = documents.filter((document) => {
-    const matchesOrder =
-      documentFilterOrderId === '' || String(document.orderId ?? '') === documentFilterOrderId
-
-    if (!matchesOrder) {
-      return false
-    }
-
+  const visibleDocuments = pagedDocuments.filter((document) => {
     return `${document.type} ${document.pages} ${getOrderTitle(document.orderId)}`
       .toLowerCase()
       .includes(deferredDocumentQuery.trim().toLowerCase())
@@ -432,6 +668,8 @@ function App() {
             clientQuery={clientQuery}
             setClientQuery={setClientQuery}
             clients={visibleClients}
+            clientsPage={clientsPage}
+            setClientFilters={setClientFilters}
             getOrdersForClient={getOrdersForClient}
             onEdit={(client) => {
               setEditingClientId(client.id)
@@ -439,6 +677,7 @@ function App() {
             }}
             onDelete={(id) => window.confirm('Удалить эту запись?') && mutate(`/api/clients/${id}`, 'DELETE', null, 'Клиент удалён.')}
             pendingAction={pendingAction}
+            loading={loadingClients}
           />
         ) : null}
 
@@ -466,6 +705,8 @@ function App() {
             translatorQuery={translatorQuery}
             setTranslatorQuery={setTranslatorQuery}
             translators={visibleTranslators}
+            translatorsPage={translatorsPage}
+            setTranslatorFilters={setTranslatorFilters}
             languages={languages}
             getOrdersForTranslator={getOrdersForTranslator}
             onEdit={(translator) => {
@@ -502,6 +743,7 @@ function App() {
               }))
             }
             pendingAction={pendingAction}
+            loading={loadingTranslators}
           />
         ) : null}
 
@@ -641,8 +883,10 @@ function App() {
             documentFilterOrderId={documentFilterOrderId}
             setDocumentFilterOrderId={setDocumentFilterOrderId}
             documents={visibleDocuments}
-            orders={orders}
+            orders={orderOptions}
             getOrderTitle={getOrderTitle}
+            documentsPage={documentsPage}
+            setDocumentFilters={setDocumentFilters}
             onEdit={(document) => {
               setEditingDocumentId(document.id)
               setDocumentForm({
@@ -653,6 +897,7 @@ function App() {
             }}
             onDelete={(id) => window.confirm('Удалить эту запись?') && mutate(`/api/documents/${id}`, 'DELETE', null, 'Документ удалён.')}
             pendingAction={pendingAction}
+            loading={loadingDocuments}
           />
         ) : null}
       </main>

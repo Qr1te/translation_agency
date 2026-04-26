@@ -21,6 +21,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,11 +75,19 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public List<ClientResponse> getAll() {
-        CacheKey key = new CacheKey(Client.class, "getAll");
+    @Transactional(readOnly = true)
+    public Page<ClientResponse> getAll(Pageable pageable) {
+        Pageable sortedPageable = withDefaultSort(pageable);
+        CacheKey key = new CacheKey(
+                Client.class,
+                "getAll",
+                sortedPageable.getPageNumber(),
+                sortedPageable.getPageSize(),
+                sortedPageable.getSort().toString()
+        );
         return cacheManager.computeIfAbsent(
                 key,
-                () -> repo.findAll().stream().map(ClientMapper::toResponse).toList()
+                () -> repo.findAll(sortedPageable).map(ClientMapper::toResponse)
         );
     }
 
@@ -140,6 +152,17 @@ public class ClientServiceImpl implements ClientService {
         if (exists) {
             throw new ConflictException("Client with email already exists: " + email);
         }
+    }
+
+    private Pageable withDefaultSort(Pageable pageable) {
+        if (pageable.getSort().isSorted()) {
+            return pageable;
+        }
+        return PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Direction.ASC, "id")
+        );
     }
 }
 

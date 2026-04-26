@@ -31,6 +31,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 @ExtendWith(MockitoExtension.class)
 class TranslatorServiceImplTest {
@@ -232,21 +236,25 @@ class TranslatorServiceImplTest {
     @Test
     @SuppressWarnings("unchecked")
     void getAll_ShouldReturnFromCacheSupplier() {
+        PageRequest pageable = PageRequest.of(0, 5, Sort.by("id"));
         Translator first = new Translator();
         first.setId(1);
         first.setFirstName("A");
         first.setLastName("B");
         first.setRatePerPage(new BigDecimal("10"));
-        when(translatorRepository.findAll()).thenReturn(List.of(first));
+        when(translatorRepository.findAll(pageable)).thenReturn(
+                new PageImpl<>(List.of(first), pageable, 1)
+        );
+        when(translatorRepository.findByIdIn(List.of(1))).thenReturn(List.of(first));
         when(cacheManager.computeIfAbsent(any(CacheKey.class), any(Supplier.class)))
                 .thenAnswer(invocation -> {
-                    Supplier<List<TranslatorResponse>> supplier = invocation.getArgument(1);
+                    Supplier<Page<TranslatorResponse>> supplier = invocation.getArgument(1);
                     return supplier.get();
                 });
 
-        List<TranslatorResponse> result = translatorService.getAll();
+        Page<TranslatorResponse> result = translatorService.getAll(pageable);
 
-        assertEquals(1, result.size());
+        assertEquals(1, result.getContent().size());
     }
 
     @Test

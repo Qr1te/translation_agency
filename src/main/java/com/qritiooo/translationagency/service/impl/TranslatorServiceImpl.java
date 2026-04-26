@@ -21,7 +21,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,12 +81,43 @@ public class TranslatorServiceImpl implements TranslatorService {
     }
 
     @Override
-    public List<TranslatorResponse> getAll() {
-        CacheKey key = new CacheKey(Translator.class, "getAll");
-        return cacheManager.computeIfAbsent(
-                key,
-                () -> translatorRepo.findAll().stream().map(TranslatorMapper::toResponse).toList()
+    @Transactional(readOnly = true)
+    public Page<TranslatorResponse> getAll(Pageable pageable) {
+        Pageable sortedPageable = withDefaultSort(pageable);
+        CacheKey key = new CacheKey(
+                Translator.class,
+                "getAll",
+                sortedPageable.getPageNumber(),
+                sortedPageable.getPageSize(),
+                sortedPageable.getSort().toString()
         );
+        return cacheManager.computeIfAbsent(key, () -> {
+            Page<Translator> translatorPage = translatorRepo.findAll(sortedPageable);
+            if (translatorPage.isEmpty()) {
+                return Page.empty(sortedPageable);
+            }
+
+            List<Integer> translatorIds = translatorPage.getContent().stream()
+                    .map(Translator::getId)
+                    .toList();
+            Map<Integer, Translator> detailedTranslatorsById = translatorRepo
+                    .findByIdIn(translatorIds)
+                    .stream()
+                    .collect(java.util.stream.Collectors.toMap(
+                            Translator::getId,
+                            Function.identity()
+                    ));
+
+            List<TranslatorResponse> responses = translatorPage.getContent().stream()
+                    .map(translator -> detailedTranslatorsById.getOrDefault(
+                            translator.getId(),
+                            translator
+                    ))
+                    .map(TranslatorMapper::toResponse)
+                    .toList();
+
+            return new PageImpl<>(responses, sortedPageable, translatorPage.getTotalElements());
+        });
     }
 
     @Override
@@ -164,5 +201,16 @@ public class TranslatorServiceImpl implements TranslatorService {
                 throw new BadRequestException("Duplicate languageId in request: " + languageId);
             }
         }
+    }
+
+    private Pageable withDefaultSort(Pageable pageable) {
+        if (pageable.getSort().isSorted()) {
+            return pageable;
+        }
+        return PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Direction.ASC, "id")
+        );
     }
 }

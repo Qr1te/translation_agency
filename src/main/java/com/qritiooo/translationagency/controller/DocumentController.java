@@ -11,6 +11,9 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -86,10 +89,11 @@ public class DocumentController {
     @GetMapping
     @Operation(summary = "Get documents")
     @ApiResponse(responseCode = "200", description = "Documents returned")
-    public ResponseEntity<List<DocumentResponse>> getAll(
-            @Positive @RequestParam(required = false) Integer orderId
+    public ResponseEntity<PagedDocumentResponse> getAll(
+            @Positive @RequestParam(required = false) Integer orderId,
+            @PageableDefault(sort = "id") Pageable pageable
     ) {
-        return ResponseEntity.ok(service.getAll(orderId));
+        return ResponseEntity.ok(toPageResponse(service.getAll(orderId, pageable)));
     }
 
     @DeleteMapping("/{id}")
@@ -101,6 +105,32 @@ public class DocumentController {
     public ResponseEntity<Void> delete(@Positive @PathVariable Integer id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private PagedDocumentResponse toPageResponse(Page<DocumentResponse> page) {
+        return new PagedDocumentResponse(
+                page.getContent(),
+                new PageMeta(
+                        page.getSize(),
+                        page.getNumber(),
+                        page.getTotalElements(),
+                        page.getTotalPages()
+                )
+        );
+    }
+
+    public static record PagedDocumentResponse(
+            List<DocumentResponse> content,
+            PageMeta page
+    ) {
+    }
+
+    public static record PageMeta(
+            int size,
+            int number,
+            long totalElements,
+            int totalPages
+    ) {
     }
 }
 

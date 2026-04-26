@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fbfdff"/>
+      <stop offset="0.45" stop-color="#f6f9fd"/>
+      <stop offset="1" stop-color="#edf3fa"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
+      gradientTransform="translate(1290 290) rotate(133.768) scale(590 480)">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.58" stop-color="#eef4fb"/>
+      <stop offset="1" stop-color="#dce7f3"/>
+    </radialGradient>
+    <linearGradient id="wave" x1="204" y1="357" x2="1164" y2="607" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d4e1ee" stop-opacity="0.14"/>
+      <stop offset="0.5" stop-color="#a9bfd5" stop-opacity="0.36"/>
+      <stop offset="1" stop-color="#d7e4f0" stop-opacity="0.12"/>
+    </linearGradient>
+    <linearGradient id="bookCover" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6f7f93"/>
+      <stop offset="1" stop-color="#415567"/>
+    </linearGradient>
+    <linearGradient id="bookPage" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fffdf7"/>
+      <stop offset="1" stop-color="#f0ebe3"/>
+    </linearGradient>
+    <linearGradient id="desk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#deebf6" stop-opacity="0.55"/>
+    </linearGradient>
+    <pattern id="dots" width="7" height="7" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1" fill="#aec3d8" fill-opacity="0.52"/>
+    </pattern>
+    <filter id="blurSoft" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+    <filter id="blurCity" x="-20%" y="-20%" width="140%" height="160%">
+      <feGaussianBlur stdDeviation="11"/>
+    </filter>
+    <filter id="bookShadow" x="-30%" y="-30%" width="170%" height="180%">
+      <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#a7b7c8" flood-opacity="0.35"/>
+    </filter>
+    <clipPath id="globeClip">
+      <circle cx="1326" cy="294" r="254"/>
+    </clipPath>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <ellipse cx="1296" cy="272" rx="400" ry="312" fill="url(#glow)" opacity="0.92"/>
+  <ellipse cx="124" cy="392" rx="230" ry="188" fill="#f5f9fe" opacity="0.92"/>
+
+  <g filter="url(#blurCity)" opacity="0.72">
+    <rect x="112" y="682" width="38" height="74" rx="8" fill="#cdd9e6"/>
+    <rect x="162" y="634" width="42" height="122" rx="8" fill="#d8e3ee"/>
+    <rect x="213" y="698" width="21" height="58" rx="6" fill="#d1dce8"/>
+    <rect x="246" y="704" width="31" height="52" rx="6" fill="#d7e1eb"/>
+    <rect x="284" y="646" width="38" height="110" rx="8" fill="#cfdae7"/>
+    <rect x="347" y="698" width="31" height="58" rx="6" fill="#d7e2ee"/>
+    <rect x="591" y="704" width="36" height="54" rx="8" fill="#d4dfeb"/>
+    <rect x="649" y="689" width="25" height="69" rx="7" fill="#d2dee8"/>
+    <rect x="706" y="686" width="39" height="72" rx="8" fill="#cdd9e6"/>
+    <rect x="792" y="698" width="28" height="60" rx="7" fill="#d9e2eb"/>
+    <rect x="864" y="696" width="30" height="62" rx="7" fill="#d3dfe9"/>
+    <rect x="948" y="706" width="34" height="52" rx="8" fill="#d7e2ee"/>
+  </g>
+
+  <rect y="734" width="1600" height="166" fill="url(#desk)"/>
+
+  <g stroke="url(#wave)" stroke-width="2.2" stroke-linecap="round" filter="url(#blurSoft)">
+    <path d="M-32 292C117 270 214 377 347 500C457 603 590 646 706 580C839 502 915 510 1014 590C1101 660 1218 698 1462 608"/>
+    <path d="M-28 304C121 282 216 390 347 510C463 617 591 657 710 592C841 522 921 523 1016 601C1107 675 1221 711 1472 620"/>
+    <path d="M-24 317C125 294 220 400 351 521C469 631 594 668 714 605C845 537 925 537 1020 614C1113 689 1226 725 1481 634"/>
+    <path d="M-20 330C129 307 223 413 354 533C474 644 597 680 717 618C848 552 930 552 1024 627C1119 703 1231 738 1490 649"/>
+    <path d="M-16 344C133 321 228 426 358 546C479 659 601 692 721 632C853 567 935 567 1028 641C1125 718 1238 754 1499 665"/>
+    <path d="M-12 359C138 336 233 441 363 560C486 674 607 707 726 648C859 585 941 584 1035 657C1133 735 1245 772 1510 683"/>
+  </g>
+
+  <g clip-path="url(#globeClip)" opacity="0.72">
+    <circle cx="1326" cy="294" r="254" fill="#f7fbff"/>
+    <circle cx="1326" cy="294" r="254" fill="url(#dots)" opacity="0.9"/>
+
+    <path d="M1112 160C1148 116 1206 94 1270 104C1295 108 1316 118 1334 133C1291 154 1277 177 1245 201C1202 232 1175 223 1134 250C1111 266 1098 286 1089 308C1060 266 1077 204 1112 160Z" fill="#c8d7e6" opacity="0.6"/>
+    <path d="M1268 173C1309 144 1364 150 1398 184C1429 216 1445 273 1433 314C1417 368 1372 414 1327 443C1300 460 1270 467 1246 461C1276 420 1275 392 1263 359C1246 315 1209 297 1209 249C1209 214 1234 190 1268 173Z" fill="#ccdae9" opacity="0.62"/>
+    <path d="M1457 198C1497 182 1532 190 1555 220C1582 256 1582 321 1556 369C1534 410 1496 438 1455 437C1430 436 1409 425 1391 411C1420 382 1432 356 1432 322C1432 290 1412 271 1416 244C1421 224 1437 206 1457 198Z" fill="#d7e4f1" opacity="0.68"/>
+    <path d="M1236 457C1266 439 1300 446 1326 470C1356 498 1374 544 1372 588C1370 630 1346 671 1312 688C1274 708 1233 696 1202 668C1171 640 1157 596 1166 557C1175 515 1202 477 1236 457Z" fill="#d4e0ec" opacity="0.68"/>
+
+    <g stroke="#c7d6e4" stroke-opacity="0.65" stroke-width="2">
+      <path d="M1075 208C1166 194 1231 219 1300 282C1375 351 1457 397 1571 390"/>
+      <path d="M1088 308C1197 286 1270 311 1330 375C1392 441 1454 476 1574 500"/>
+      <path d="M1098 112C1187 145 1235 202 1280 282C1333 376 1409 431 1548 461"/>
+      <path d="M1208 74C1308 105 1385 175 1453 266C1501 331 1548 374 1596 394"/>
+      <path d="M1157 498C1232 459 1297 460 1364 499C1446 548 1506 605 1558 680"/>
+      <path d="M1204 93C1275 137 1314 210 1328 294C1342 385 1387 466 1465 548"/>
+      <path d="M1008 296C1111 304 1185 332 1240 393C1294 452 1385 530 1510 581"/>
+    </g>
+
+    <g fill="#bdd0e2" opacity="0.78">
+      <circle cx="1119" cy="224" r="7"/>
+      <circle cx="1192" cy="183" r="5"/>
+      <circle cx="1258" cy="236" r="6"/>
+      <circle cx="1326" cy="298" r="7"/>
+      <circle cx="1393" cy="221" r="8"/>
+      <circle cx="1448" cy="289" r="7"/>
+      <circle cx="1507" cy="214" r="6"/>
+      <circle cx="1551" cy="119" r="6"/>
+      <circle cx="1573" cy="361" r="8"/>
+      <circle cx="1449" cy="504" r="8"/>
+      <circle cx="1364" cy="437" r="6"/>
+      <circle cx="1216" cy="522" r="7"/>
+      <circle cx="1105" cy="498" r="5"/>
+      <circle cx="1042" cy="436" r="6"/>
+      <circle cx="1004" cy="314" r="7"/>
+      <circle cx="1144" cy="598" r="6"/>
+      <circle cx="1516" cy="593" r="6"/>
+    </g>
+  </g>
+
+  <g opacity="0.82">
+    <circle cx="1326" cy="294" r="254" stroke="#d4e0ec" stroke-width="3"/>
+    <ellipse cx="1326" cy="294" rx="205" ry="254" stroke="#dce7f2" stroke-width="2"/>
+    <ellipse cx="1326" cy="294" rx="140" ry="254" stroke="#e4ecf5" stroke-width="2"/>
+    <path d="M1074 223C1165 251 1244 252 1326 252C1407 252 1490 241 1578 209" stroke="#dbe6f1" stroke-width="2"/>
+    <path d="M1078 372C1162 352 1242 340 1326 340C1414 340 1496 356 1576 388" stroke="#dce7f1" stroke-width="2"/>
+  </g>
+
+  <g fill="#7f9ebd" font-family="Georgia, 'Times New Roman', serif" opacity="0.8">
+    <text x="1036" y="304" font-size="34">Traduction</text>
+    <text x="998" y="390" font-size="42">&#x00DC;bersetzung</text>
+    <text x="1030" y="474" font-size="36">Traducci&#x00F3;n</text>
+    <text x="1266" y="390" font-size="64">Translation</text>
+    <text x="1212" y="569" font-size="54">&#x7FFB;&#x8BD1;</text>
+    <text x="1070" y="653" font-size="44">&#x041F;&#x0435;&#x0440;&#x0435;&#x0432;&#x043E;&#x0434;</text>
+    <text x="1430" y="514" font-size="54">&#x062A;&#x0631;&#x062C;&#x0645;&#x0629;</text>
+    <text x="1128" y="724" font-size="34">&#x7FFB;&#x8A33;&#x3059;&#x308B;</text>
+  </g>
+
+  <g filter="url(#bookShadow)">
+    <g transform="translate(1228 642) rotate(3)">
+      <rect x="0" y="0" width="320" height="60" rx="10" fill="url(#bookCover)"/>
+      <rect x="8" y="10" width="304" height="45" rx="6" fill="url(#bookPage)"/>
+      <rect x="6" y="6" width="308" height="8" rx="4" fill="#445667" opacity="0.92"/>
+    </g>
+    <g transform="translate(1182 703) rotate(4)">
+      <rect x="0" y="0" width="326" height="56" rx="10" fill="url(#bookCover)"/>
+      <rect x="8" y="10" width="310" height="41" rx="6" fill="url(#bookPage)"/>
+      <rect x="6" y="6" width="314" height="8" rx="4" fill="#405365" opacity="0.92"/>
+    </g>
+    <g transform="translate(1160 760) rotate(2)">
+      <rect x="0" y="0" width="338" height="62" rx="12" fill="url(#bookCover)"/>
+      <rect x="8" y="10" width="322" height="47" rx="6" fill="url(#bookPage)"/>
+      <rect x="6" y="6" width="326" height="8" rx="4" fill="#425567" opacity="0.94"/>
+    </g>
+  </g>
+
+  <g filter="url(#bookShadow)" opacity="0.95">
+    <g transform="translate(830 790) rotate(4)">
+      <rect x="0" y="0" width="154" height="34" rx="8" fill="#fdfcf8"/>
+      <rect x="0" y="0" width="154" height="5" rx="3" fill="#9eb4c7" opacity="0.75"/>
+      <path d="M46 0H108V30C94 25 77 25 62 30C58 28 54 27 46 29V0Z" fill="#f5f2eb"/>
+      <path d="M77 0V30" stroke="#d4dde7" stroke-width="1.8"/>
+    </g>
+    <g transform="translate(1094 840)">
+      <path d="M0 18C22 8 36 8 63 13L91 19L86 31L59 25C34 20 24 20 7 29L0 18Z" fill="#566c82"/>
+      <rect x="88" y="15" width="46" height="7" rx="3.5" fill="#7f96ad"/>
+      <rect x="85" y="22" width="52" height="8" rx="4" fill="#495f75"/>
+    </g>
+  </g>
+</svg>

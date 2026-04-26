@@ -11,6 +11,9 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -85,8 +88,10 @@ public class TranslatorController {
     @GetMapping
     @Operation(summary = "Get all translators")
     @ApiResponse(responseCode = "200", description = "Translators returned")
-    public ResponseEntity<List<TranslatorResponse>> getAll() {
-        return ResponseEntity.ok(service.getAll());
+    public ResponseEntity<PagedTranslatorResponse> getAll(
+            @PageableDefault(sort = "id") Pageable pageable
+    ) {
+        return ResponseEntity.ok(toPageResponse(service.getAll(pageable)));
     }
 
     @DeleteMapping("/{id}")
@@ -98,5 +103,31 @@ public class TranslatorController {
     public ResponseEntity<Void> delete(@Positive @PathVariable Integer id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private PagedTranslatorResponse toPageResponse(Page<TranslatorResponse> page) {
+        return new PagedTranslatorResponse(
+                page.getContent(),
+                new PageMeta(
+                        page.getSize(),
+                        page.getNumber(),
+                        page.getTotalElements(),
+                        page.getTotalPages()
+                )
+        );
+    }
+
+    public static record PagedTranslatorResponse(
+            List<TranslatorResponse> content,
+            PageMeta page
+    ) {
+    }
+
+    public static record PageMeta(
+            int size,
+            int number,
+            long totalElements,
+            int totalPages
+    ) {
     }
 }

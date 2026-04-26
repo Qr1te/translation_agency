@@ -3,6 +3,8 @@ package com.qritiooo.translationagency.repository;
 import com.qritiooo.translationagency.model.Translator;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -13,8 +15,14 @@ public interface TranslatorRepository extends JpaRepository<Translator, Integer>
     List<Translator> findAll();
 
     @Override
+    Page<Translator> findAll(Pageable pageable);
+
+    @Override
     @EntityGraph(attributePaths = {"translatorLanguages", "translatorLanguages.language"})
     Optional<Translator> findById(Integer id);
+
+    @EntityGraph(attributePaths = {"translatorLanguages", "translatorLanguages.language"})
+    List<Translator> findByIdIn(List<Integer> ids);
 
     @EntityGraph(attributePaths = {"translatorLanguages", "translatorLanguages.language"})
     List<Translator> findDistinctByTranslatorLanguages_Language_Id(Integer languageId);
