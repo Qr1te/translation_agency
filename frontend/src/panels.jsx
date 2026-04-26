@@ -132,6 +132,144 @@ export function ClientsPanel(props) {
   )
 }
 
+export function LanguagesPanel(props) {
+  const {
+    languageForm,
+    setLanguageForm,
+    editingLanguageId,
+    onSubmit,
+    onReset,
+    languageQuery,
+    setLanguageQuery,
+    languages,
+    languagePage,
+    setLanguageFilters,
+    onEdit,
+    onDelete,
+    pendingAction,
+    loading,
+  } = props
+
+  return (
+    <div className="section-layout">
+      <div className="form-card">
+        <form className="form-stack" onSubmit={onSubmit}>
+          <div className="field-grid">
+            <label className="field">
+              <span>Код</span>
+              <input
+                value={languageForm.code}
+                onChange={(event) =>
+                  setLanguageForm((current) => ({ ...current, code: event.target.value }))
+                }
+                placeholder="EN"
+              />
+            </label>
+            <label className="field">
+              <span>Название</span>
+              <input
+                value={languageForm.name}
+                onChange={(event) =>
+                  setLanguageForm((current) => ({ ...current, name: event.target.value }))
+                }
+                placeholder="English"
+              />
+            </label>
+          </div>
+          <div className="form-actions">
+            <button className="button primary" type="submit" disabled={!!pendingAction}>
+              {editingLanguageId ? 'Сохранить изменения' : 'Добавить язык'}
+            </button>
+            <button className="button ghost" type="button" onClick={onReset}>
+              Очистить поля
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div className="list-card">
+        <div className="toolbar">
+          <label className="field" style={{ flex: 1 }}>
+            <span>Фильтр на странице</span>
+            <input
+              value={languageQuery}
+              onChange={(event) => setLanguageQuery(event.target.value)}
+              placeholder="Введите код или название"
+            />
+          </label>
+        </div>
+
+        <div className="pagination">
+          <div className="mini-note">
+            Страница {languagePage.number + 1} из {Math.max(languagePage.totalPages, 1)} -{' '}
+            всего языков: {languagePage.totalElements}
+          </div>
+          <div className="card-actions">
+            <button
+              className="icon-button"
+              type="button"
+              disabled={languagePage.number === 0 || loading}
+              onClick={() =>
+                setLanguageFilters((current) => ({
+                  ...current,
+                  page: Math.max(current.page - 1, 0),
+                }))
+              }
+            >
+              Назад
+            </button>
+            <button
+              className="icon-button"
+              type="button"
+              disabled={
+                languagePage.totalPages === 0 ||
+                languagePage.number >= languagePage.totalPages - 1 ||
+                loading
+              }
+              onClick={() =>
+                setLanguageFilters((current) => ({
+                  ...current,
+                  page: current.page + 1,
+                }))
+              }
+            >
+              Далее
+            </button>
+          </div>
+        </div>
+
+        <div className="cards-grid">
+          {languages.length === 0 ? (
+            <div className="empty-state">По выбранной странице ничего не найдено.</div>
+          ) : (
+            languages.map((language) => (
+              <article key={language.id} className="card">
+                <div className="card-header">
+                  <h3>{language.name}</h3>
+                  <span className="badge">{language.code.toUpperCase()}</span>
+                </div>
+                <div className="mini-note">ID: {language.id}</div>
+                <div className="card-actions">
+                  <button className="icon-button" type="button" onClick={() => onEdit(language)}>
+                    Изменить
+                  </button>
+                  <button
+                    className="icon-button danger"
+                    type="button"
+                    onClick={() => onDelete(language.id)}
+                  >
+                    Удалить
+                  </button>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function TranslatorsPanel(props) {
   const {
     translatorForm,

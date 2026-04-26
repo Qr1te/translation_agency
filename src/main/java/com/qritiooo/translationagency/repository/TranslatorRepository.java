@@ -15,5 +15,8 @@ public interface TranslatorRepository extends JpaRepository<Translator, Integer>
     @Override
     @EntityGraph(attributePaths = {"translatorLanguages", "translatorLanguages.language"})
     Optional<Translator> findById(Integer id);
+
+    @EntityGraph(attributePaths = {"translatorLanguages", "translatorLanguages.language"})
+    List<Translator> findDistinctByTranslatorLanguages_Language_Id(Integer languageId);
 }
 

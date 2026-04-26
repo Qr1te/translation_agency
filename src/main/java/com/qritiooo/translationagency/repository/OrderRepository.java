@@ -64,6 +64,11 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             Pageable pageable
     );
 
+    List<Order> findDistinctBySourceLanguage_IdOrTargetLanguage_Id(
+            Integer sourceLanguageId,
+            Integer targetLanguageId
+    );
+
     @EntityGraph(attributePaths = {
             "client",
             "translator",

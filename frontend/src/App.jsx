@@ -7,6 +7,7 @@ import {
   buildQuery,
   emptyClientForm,
   emptyDocumentForm,
+  emptyLanguageForm,
   emptyOrderForm,
   emptyTranslatorForm,
   toOptionalNumber,
@@ -14,6 +15,7 @@ import {
 import {
   ClientsPanel,
   DocumentsPanel,
+  LanguagesPanel,
   OrdersPanel,
   TranslatorsPanel,
 } from './panels'
@@ -29,6 +31,7 @@ function App() {
   const [clients, setClients] = useState([])
   const [translators, setTranslators] = useState([])
   const [languages, setLanguages] = useState([])
+  const [pagedLanguages, setPagedLanguages] = useState([])
   const [documents, setDocuments] = useState([])
   const [orders, setOrders] = useState([])
   const [ordersPage, setOrdersPage] = useState({
@@ -37,20 +40,29 @@ function App() {
     totalElements: 0,
     totalPages: 0,
   })
+  const [languagePage, setLanguagePage] = useState({
+    size: 8,
+    number: 0,
+    totalElements: 0,
+    totalPages: 0,
+  })
 
   const [clientForm, setClientForm] = useState(emptyClientForm)
   const [documentForm, setDocumentForm] = useState(emptyDocumentForm)
+  const [languageForm, setLanguageForm] = useState(emptyLanguageForm)
   const [translatorForm, setTranslatorForm] = useState(emptyTranslatorForm)
   const [orderForm, setOrderForm] = useState(emptyOrderForm)
 
   const [editingClientId, setEditingClientId] = useState(null)
   const [editingDocumentId, setEditingDocumentId] = useState(null)
+  const [editingLanguageId, setEditingLanguageId] = useState(null)
   const [editingTranslatorId, setEditingTranslatorId] = useState(null)
   const [editingOrderId, setEditingOrderId] = useState(null)
 
   const [clientQuery, setClientQuery] = useState('')
   const [translatorQuery, setTranslatorQuery] = useState('')
   const [documentQuery, setDocumentQuery] = useState('')
+  const [languageQuery, setLanguageQuery] = useState('')
   const [orderQuery, setOrderQuery] = useState('')
   const [documentFilterOrderId, setDocumentFilterOrderId] = useState('')
   const [orderFilters, setOrderFilters] = useState({
@@ -60,10 +72,16 @@ function App() {
     page: 0,
     size: 12,
   })
+  const [languageFilters, setLanguageFilters] = useState({
+    page: 0,
+    size: 8,
+  })
+  const [loadingLanguages, setLoadingLanguages] = useState(true)
 
   const deferredClientQuery = useDeferredValue(clientQuery)
   const deferredTranslatorQuery = useDeferredValue(translatorQuery)
   const deferredDocumentQuery = useDeferredValue(documentQuery)
+  const deferredLanguageQuery = useDeferredValue(languageQuery)
   const deferredOrderQuery = useDeferredValue(orderQuery)
 
   const loading = loadingReferenceData || loadingOrders
@@ -77,7 +95,10 @@ function App() {
         const requests = [
           { path: '/api/clients', setter: setClients },
           { path: '/api/translators', setter: setTranslators },
-          { path: '/api/languages', setter: setLanguages },
+          {
+            path: `/api/languages${buildQuery({ size: 500, sort: 'id,asc' })}`,
+            setter: setLanguages,
+          },
           { path: '/api/documents', setter: setDocuments },
         ]
 
@@ -86,7 +107,7 @@ function App() {
             const nextData = await apiRequest(path)
 
             if (!cancelled) {
-              setter(nextData ?? [])
+              setter(Array.isArray(nextData) ? nextData : nextData?.content ?? [])
             }
           }),
         )
@@ -153,6 +174,63 @@ function App() {
     }
   }, [orderFilters, reloadToken])
 
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadLanguagesPage() {
+      setLoadingLanguages(true)
+
+      try {
+        const languageQueryString = buildQuery({
+          page: languageFilters.page,
+          size: languageFilters.size,
+        })
+
+        const nextLanguages = await apiRequest(`/api/languages${languageQueryString}`)
+
+        if (cancelled) {
+          return
+        }
+
+        const nextPage = nextLanguages?.page ?? {
+          size: 8,
+          number: 0,
+          totalElements: 0,
+          totalPages: 0,
+        }
+
+        if (
+          nextPage.totalPages > 0 &&
+          nextPage.number >= nextPage.totalPages &&
+          languageFilters.page > 0
+        ) {
+          setLanguageFilters((current) => ({
+            ...current,
+            page: nextPage.totalPages - 1,
+          }))
+          return
+        }
+
+        setPagedLanguages(nextLanguages?.content ?? [])
+        setLanguagePage(nextPage)
+      } catch (error) {
+        if (!cancelled) {
+          setBanner({ type: 'error', text: error.message })
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingLanguages(false)
+        }
+      }
+    }
+
+    loadLanguagesPage()
+
+    return () => {
+      cancelled = true
+    }
+  }, [languageFilters, reloadToken])
+
   function queueRefresh(message) {
     if (message) {
       setBanner({ type: 'success', text: message })
@@ -206,6 +284,12 @@ function App() {
     `${order.title} ${getClientName(order.clientId)} ${getTranslatorName(order.translatorId)}`
       .toLowerCase()
       .includes(deferredOrderQuery.trim().toLowerCase()),
+  )
+
+  const visibleLanguages = pagedLanguages.filter((language) =>
+    `${language.code} ${language.name}`
+      .toLowerCase()
+      .includes(deferredLanguageQuery.trim().toLowerCase()),
   )
 
   const visibleDocuments = documents.filter((document) => {
@@ -418,6 +502,53 @@ function App() {
               }))
             }
             pendingAction={pendingAction}
+          />
+        ) : null}
+
+        {activeSection === 'languages' ? (
+          <LanguagesPanel
+            languageForm={languageForm}
+            setLanguageForm={setLanguageForm}
+            editingLanguageId={editingLanguageId}
+            onSubmit={(event) => {
+              event.preventDefault()
+              mutate(
+                editingLanguageId ? `/api/languages/${editingLanguageId}` : '/api/languages',
+                editingLanguageId ? 'PUT' : 'POST',
+                languageForm,
+                editingLanguageId ? 'Данные языка обновлены.' : 'Язык добавлен.',
+                () => {
+                  setEditingLanguageId(null)
+                  setLanguageForm(emptyLanguageForm())
+                },
+              )
+            }}
+            onReset={() => {
+              setEditingLanguageId(null)
+              setLanguageForm(emptyLanguageForm())
+            }}
+            languageQuery={languageQuery}
+            setLanguageQuery={setLanguageQuery}
+            languages={visibleLanguages}
+            languagePage={languagePage}
+            setLanguageFilters={setLanguageFilters}
+            onEdit={(language) => {
+              setEditingLanguageId(language.id)
+              setLanguageForm({ code: language.code, name: language.name })
+            }}
+            onDelete={(id) =>
+              window.confirm('Удалить эту запись?') &&
+              mutate(`/api/languages/${id}`, 'DELETE', null, 'Язык удалён.', () => {
+                if (languagePage.number > 0 && visibleLanguages.length === 1) {
+                  setLanguageFilters((current) => ({
+                    ...current,
+                    page: Math.max(current.page - 1, 0),
+                  }))
+                }
+              })
+            }
+            pendingAction={pendingAction}
+            loading={loadingLanguages}
           />
         ) : null}
 

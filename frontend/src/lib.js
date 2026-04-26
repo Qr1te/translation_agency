@@ -2,6 +2,7 @@ export const SECTION_OPTIONS = [
   { id: 'orders', label: 'Заказы' },
   { id: 'clients', label: 'Клиенты' },
   { id: 'translators', label: 'Переводчики' },
+  { id: 'languages', label: 'Языки' },
   { id: 'documents', label: 'Документы' },
 ]
 
@@ -31,6 +32,8 @@ const decimalFormatter = new Intl.NumberFormat('en-US', {
 })
 
 const FIELD_LABELS = {
+  code: 'Код',
+  name: 'Название',
   firstName: 'Имя',
   lastName: 'Фамилия',
   email: 'Электронная почта',
@@ -52,6 +55,10 @@ const FIELD_LABELS = {
 
 export function emptyClientForm() {
   return { firstName: '', lastName: '', email: '' }
+}
+
+export function emptyLanguageForm() {
+  return { code: '', name: '' }
 }
 
 export function emptyDocumentForm() {
