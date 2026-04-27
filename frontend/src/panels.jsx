@@ -791,7 +791,7 @@ export function OrdersPanel(props) {
         </label>
         <div className="form-actions">
           <button
-            className="button secondary"
+            className="button secondary filter-reset-button"
             type="button"
             onClick={() =>
               setOrderFilters({
