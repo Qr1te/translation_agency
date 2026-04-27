@@ -1,8 +1,13 @@
-import { startTransition, useDeferredValue, useEffect, useState } from 'react'
+import {
+  startTransition,
+  useDeferredValue,
+  useEffect,
+  useEffectEvent,
+  useState,
+} from 'react'
 import './App.css'
 import {
   SECTION_OPTIONS,
-  ORDER_STATUS_LABELS,
   apiRequest,
   buildQuery,
   emptyClientForm,
@@ -14,11 +19,59 @@ import {
 } from './lib'
 import {
   ClientsPanel,
+  ClientForm,
   DocumentsPanel,
+  DocumentForm,
   LanguagesPanel,
+  LanguageForm,
   OrdersPanel,
+  OrderForm,
   TranslatorsPanel,
+  TranslatorForm,
 } from './panels'
+
+const SECTION_CREATE_LABELS = {
+  clients: 'Добавить клиента',
+  translators: 'Добавить переводчика',
+  languages: 'Добавить язык',
+  orders: 'Добавить заказ',
+  documents: 'Добавить документ',
+}
+
+const SECTION_EDIT_LABELS = {
+  clients: 'Редактирование клиента',
+  translators: 'Редактирование переводчика',
+  languages: 'Редактирование языка',
+  orders: 'Редактирование заказа',
+  documents: 'Редактирование документа',
+}
+
+function FormDialog({ title, onClose, children }) {
+  return (
+    <div className="modal-backdrop" role="presentation" onClick={onClose}>
+      <div
+        className="modal-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dialog-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="modal-header">
+          <h3 id="dialog-title">{title}</h3>
+          <button
+            className="icon-button modal-close"
+            type="button"
+            onClick={onClose}
+            aria-label="Закрыть окно"
+          >
+            Закрыть
+          </button>
+        </div>
+        <div className="modal-body">{children}</div>
+      </div>
+    </div>
+  )
+}
 
 function App() {
   const [activeSection, setActiveSection] = useState('orders')
@@ -27,6 +80,7 @@ function App() {
   const [loadingOrders, setLoadingOrders] = useState(true)
   const [pendingAction, setPendingAction] = useState('')
   const [reloadToken, setReloadToken] = useState(0)
+  const [dialogSection, setDialogSection] = useState(null)
 
   const [clients, setClients] = useState([])
   const [pagedClients, setPagedClients] = useState([])
@@ -507,6 +561,136 @@ function App() {
   const getDocumentsForOrder = (orderId) =>
     documents.filter((document) => document.orderId === orderId)
 
+  function resetSectionState(section) {
+    if (section === 'clients') {
+      setEditingClientId(null)
+      setClientForm(emptyClientForm())
+      return
+    }
+
+    if (section === 'translators') {
+      setEditingTranslatorId(null)
+      setTranslatorForm(emptyTranslatorForm())
+      return
+    }
+
+    if (section === 'languages') {
+      setEditingLanguageId(null)
+      setLanguageForm(emptyLanguageForm())
+      return
+    }
+
+    if (section === 'orders') {
+      setEditingOrderId(null)
+      setOrderForm(emptyOrderForm())
+      return
+    }
+
+    if (section === 'documents') {
+      setEditingDocumentId(null)
+      setDocumentForm(emptyDocumentForm())
+    }
+  }
+
+  function openCreateDialog(section) {
+    resetSectionState(section)
+    setDialogSection(section)
+  }
+
+  function closeDialog() {
+    if (dialogSection) {
+      resetSectionState(dialogSection)
+    }
+
+    setDialogSection(null)
+  }
+
+  function openClientEditor(client) {
+    setEditingClientId(client.id)
+    setClientForm({
+      firstName: client.firstName,
+      lastName: client.lastName,
+      email: client.email,
+    })
+    setDialogSection('clients')
+  }
+
+  function openTranslatorEditor(translator) {
+    setEditingTranslatorId(translator.id)
+    setTranslatorForm({
+      firstName: translator.firstName,
+      lastName: translator.lastName,
+      ratePerPage: String(translator.ratePerPage),
+      languages:
+        translator.languages.length > 0
+          ? translator.languages.map((item) => ({
+              languageId: String(item.languageId),
+              proficiencyLevel: item.proficiencyLevel,
+            }))
+          : [{ languageId: '', proficiencyLevel: 'INTERMEDIATE' }],
+    })
+    setDialogSection('translators')
+  }
+
+  function openLanguageEditor(language) {
+    setEditingLanguageId(language.id)
+    setLanguageForm({ code: language.code, name: language.name })
+    setDialogSection('languages')
+  }
+
+  function openOrderEditor(order) {
+    setEditingOrderId(order.id)
+    setOrderForm({
+      title: order.title,
+      status: order.status,
+      sourceLanguageId: order.sourceLanguageId ? String(order.sourceLanguageId) : '',
+      targetLanguageId: order.targetLanguageId ? String(order.targetLanguageId) : '',
+      clientId: order.clientId ? String(order.clientId) : '',
+      translatorId: order.translatorId ? String(order.translatorId) : '',
+      documentIds: (order.documentIds ?? []).map(Number),
+    })
+    setDialogSection('orders')
+  }
+
+  function openDocumentEditor(document) {
+    setEditingDocumentId(document.id)
+    setDocumentForm({
+      type: document.type,
+      pages: String(document.pages),
+      orderId: document.orderId ? String(document.orderId) : '',
+    })
+    setDialogSection('documents')
+  }
+
+  const closeDialogFromEffect = useEffectEvent(() => {
+    if (dialogSection) {
+      resetSectionState(dialogSection)
+    }
+
+    setDialogSection(null)
+  })
+
+  useEffect(() => {
+    if (!dialogSection) {
+      return undefined
+    }
+
+    const previousOverflow = document.body.style.overflow
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        closeDialogFromEffect()
+      }
+    }
+
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [dialogSection])
+
   const visibleClients = pagedClients.filter((client) =>
     `${client.firstName} ${client.lastName} ${client.email}`
       .toLowerCase()
@@ -559,11 +743,17 @@ function App() {
     }
   }
 
-  const currentOrderFilterSummary = [
-    orderFilters.status ? ORDER_STATUS_LABELS[orderFilters.status] : null,
-    orderFilters.clientId ? getClientName(Number(orderFilters.clientId)) : null,
-    orderFilters.translatorId ? getTranslatorName(Number(orderFilters.translatorId)) : null,
-  ].filter(Boolean)
+  const currentSectionLabel =
+    SECTION_OPTIONS.find((section) => section.id === activeSection)?.label ?? ''
+  const dialogTitle = dialogSection
+    ? ((dialogSection === 'clients' && editingClientId !== null) ||
+        (dialogSection === 'translators' && editingTranslatorId !== null) ||
+        (dialogSection === 'languages' && editingLanguageId !== null) ||
+        (dialogSection === 'orders' && editingOrderId !== null) ||
+        (dialogSection === 'documents' && editingDocumentId !== null)
+        ? SECTION_EDIT_LABELS[dialogSection]
+        : SECTION_CREATE_LABELS[dialogSection])
+    : ''
 
   return (
     <div className="app-shell">
@@ -586,44 +776,34 @@ function App() {
         ))}
       </nav>
 
-      <section className="insights-grid">
-        <article className="insight-card">
-          <h2>Клиенты и история обращений</h2>
-          <p>
-            Сейчас {clients.filter((client) => getOrdersForClient(client.id).length > 0).length}{' '}
-            клиентов уже связаны с заказами в базе. Это помогает быстро видеть
-            повторные обращения и не терять историю работы по каждому клиенту.
-          </p>
-        </article>
-        <article className="insight-card">
-          <h2>Языковые пары и исполнители</h2>
-          <p>
-            Сейчас доступно{' '}
-            {translators.reduce((total, translator) => total + translator.languages.length, 0)}{' '}
-            записей о языках и уровнях владения. Так менеджеру проще подобрать
-            переводчика под тематику проекта, срок и нужную языковую пару.
-          </p>
-        </article>
-        <article className="insight-card">
-          <h2>Очередь заказов под контролем</h2>
-          <p>
-            {currentOrderFilterSummary.length > 0
-              ? `Сейчас включены фильтры: ${currentOrderFilterSummary.join(', ')}. Так удобнее быстро проверить нужный проект или конкретного исполнителя.`
-              : 'По умолчанию отображается вся очередь заказов. Ниже можно быстро отобрать проекты по клиенту, переводчику или текущему статусу.'}
-          </p>
-        </article>
-      </section>
-
       <main className="section-panel">
         <div className="section-header">
           <div>
-            <h2>{SECTION_OPTIONS.find((section) => section.id === activeSection)?.label}</h2>
-            <p>{pendingAction || (loading ? 'Обновляем рабочие данные...' : 'Данные синхронизированы, можно продолжать работу.')}</p>
+            <h2>{currentSectionLabel}</h2>
+            <p>
+              {pendingAction ||
+                (loading
+                  ? 'Обновляем рабочие данные...'
+                  : 'Данные синхронизированы, можно продолжать работу.')}
+            </p>
           </div>
           <div className="section-actions">
             {loading ? <div className="spinner-line">Загружаем данные</div> : null}
             {pendingAction ? <div className="spinner-line">{pendingAction}</div> : null}
-            <button className="button ghost" type="button" onClick={() => queueRefresh('Данные обновлены.')} disabled={loading}>
+            <button
+              className="button primary"
+              type="button"
+              onClick={() => openCreateDialog(activeSection)}
+              disabled={loading}
+            >
+              {SECTION_CREATE_LABELS[activeSection]}
+            </button>
+            <button
+              className="button ghost"
+              type="button"
+              onClick={() => queueRefresh('Данные обновлены.')}
+              disabled={loading}
+            >
               Обновить список
             </button>
           </div>
@@ -631,133 +811,40 @@ function App() {
 
         {activeSection === 'clients' ? (
           <ClientsPanel
-            clientForm={clientForm}
-            setClientForm={setClientForm}
-            editingClientId={editingClientId}
-            onSubmit={(event) => {
-              event.preventDefault()
-              mutate(editingClientId ? `/api/clients/${editingClientId}` : '/api/clients', editingClientId ? 'PUT' : 'POST', clientForm, editingClientId ? 'Данные клиента обновлены.' : 'Клиент добавлен.', () => {
-                setEditingClientId(null)
-                setClientForm(emptyClientForm())
-              })
-            }}
-            onReset={() => {
-              setEditingClientId(null)
-              setClientForm(emptyClientForm())
-            }}
             clientQuery={clientQuery}
             setClientQuery={setClientQuery}
             clients={visibleClients}
             clientsPage={clientsPage}
             setClientFilters={setClientFilters}
             getOrdersForClient={getOrdersForClient}
-            onEdit={(client) => {
-              setEditingClientId(client.id)
-              setClientForm({ firstName: client.firstName, lastName: client.lastName, email: client.email })
-            }}
+            onEdit={openClientEditor}
             onDelete={(id) => window.confirm('Удалить эту запись?') && mutate(`/api/clients/${id}`, 'DELETE', null, 'Клиент удалён.')}
-            pendingAction={pendingAction}
             loading={loadingClients}
           />
         ) : null}
 
         {activeSection === 'translators' ? (
           <TranslatorsPanel
-            translatorForm={translatorForm}
-            setTranslatorForm={setTranslatorForm}
-            editingTranslatorId={editingTranslatorId}
-            onSubmit={(event) => {
-              event.preventDefault()
-              mutate(editingTranslatorId ? `/api/translators/${editingTranslatorId}` : '/api/translators', editingTranslatorId ? 'PUT' : 'POST', {
-                firstName: translatorForm.firstName,
-                lastName: translatorForm.lastName,
-                ratePerPage: Number(translatorForm.ratePerPage),
-                languages: translatorForm.languages.map((item) => ({ languageId: Number(item.languageId), proficiencyLevel: item.proficiencyLevel })),
-              }, editingTranslatorId ? 'Данные переводчика обновлены.' : 'Переводчик добавлен.', () => {
-                setEditingTranslatorId(null)
-                setTranslatorForm(emptyTranslatorForm())
-              })
-            }}
-            onReset={() => {
-              setEditingTranslatorId(null)
-              setTranslatorForm(emptyTranslatorForm())
-            }}
             translatorQuery={translatorQuery}
             setTranslatorQuery={setTranslatorQuery}
             translators={visibleTranslators}
             translatorsPage={translatorsPage}
             setTranslatorFilters={setTranslatorFilters}
-            languages={languages}
             getOrdersForTranslator={getOrdersForTranslator}
-            onEdit={(translator) => {
-              setEditingTranslatorId(translator.id)
-              setTranslatorForm({
-                firstName: translator.firstName,
-                lastName: translator.lastName,
-                ratePerPage: String(translator.ratePerPage),
-                languages: translator.languages.length > 0
-                  ? translator.languages.map((item) => ({
-                      languageId: String(item.languageId),
-                      proficiencyLevel: item.proficiencyLevel,
-                    }))
-                  : [{ languageId: '', proficiencyLevel: 'INTERMEDIATE' }],
-              })
-            }}
+            onEdit={openTranslatorEditor}
             onDelete={(id) => window.confirm('Удалить эту запись?') && mutate(`/api/translators/${id}`, 'DELETE', null, 'Переводчик удалён.')}
-            onLanguageChange={(index, field, value) =>
-              setTranslatorForm((current) => ({
-                ...current,
-                languages: current.languages.map((item, currentIndex) => currentIndex === index ? { ...item, [field]: value } : item),
-              }))
-            }
-            onLanguageAdd={() =>
-              setTranslatorForm((current) => ({
-                ...current,
-                languages: [...current.languages, { languageId: '', proficiencyLevel: 'INTERMEDIATE' }],
-              }))
-            }
-            onLanguageRemove={(index) =>
-              setTranslatorForm((current) => ({
-                ...current,
-                languages: current.languages.length === 1 ? current.languages : current.languages.filter((_, currentIndex) => currentIndex !== index),
-              }))
-            }
-            pendingAction={pendingAction}
             loading={loadingTranslators}
           />
         ) : null}
 
         {activeSection === 'languages' ? (
           <LanguagesPanel
-            languageForm={languageForm}
-            setLanguageForm={setLanguageForm}
-            editingLanguageId={editingLanguageId}
-            onSubmit={(event) => {
-              event.preventDefault()
-              mutate(
-                editingLanguageId ? `/api/languages/${editingLanguageId}` : '/api/languages',
-                editingLanguageId ? 'PUT' : 'POST',
-                languageForm,
-                editingLanguageId ? 'Данные языка обновлены.' : 'Язык добавлен.',
-                () => {
-                  setEditingLanguageId(null)
-                  setLanguageForm(emptyLanguageForm())
-                },
-              )
-            }}
-            onReset={() => {
-              setEditingLanguageId(null)
-              setLanguageForm(emptyLanguageForm())
-            }}
             languageQuery={languageQuery}
             setLanguageQuery={setLanguageQuery}
             languages={visibleLanguages}
             languagePage={languagePage}
             setLanguageFilters={setLanguageFilters}
-            onEdit={(language) => {
-              setEditingLanguageId(language.id)
-              setLanguageForm({ code: language.code, name: language.name })
-            }}
+            onEdit={openLanguageEditor}
             onDelete={(id) =>
               window.confirm('Удалить эту запись?') &&
               mutate(`/api/languages/${id}`, 'DELETE', null, 'Язык удалён.', () => {
@@ -769,36 +856,12 @@ function App() {
                 }
               })
             }
-            pendingAction={pendingAction}
             loading={loadingLanguages}
           />
         ) : null}
 
         {activeSection === 'orders' ? (
           <OrdersPanel
-            orderForm={orderForm}
-            setOrderForm={setOrderForm}
-            editingOrderId={editingOrderId}
-            onSubmit={(event) => {
-              event.preventDefault()
-              mutate(editingOrderId ? `/api/orders/${editingOrderId}` : '/api/orders', editingOrderId ? 'PUT' : 'POST', {
-                title: orderForm.title,
-                status: orderForm.status,
-                sourceLanguageId: toOptionalNumber(orderForm.sourceLanguageId),
-                targetLanguageId: toOptionalNumber(orderForm.targetLanguageId),
-                clientId: toOptionalNumber(orderForm.clientId),
-                translatorId: toOptionalNumber(orderForm.translatorId),
-                documentIds: orderForm.documentIds.map(Number),
-              }, editingOrderId ? 'Данные заказа обновлены.' : 'Заказ добавлен.', () => {
-                setEditingOrderId(null)
-                setOrderForm(emptyOrderForm())
-              })
-            }}
-            onReset={() => {
-              setEditingOrderId(null)
-              setOrderForm(emptyOrderForm())
-            }}
-            documents={documents}
             ordersPage={ordersPage}
             orderQuery={orderQuery}
             setOrderQuery={setOrderQuery}
@@ -812,52 +875,14 @@ function App() {
             getTranslatorName={getTranslatorName}
             getLanguageName={getLanguageName}
             getDocumentsForOrder={getDocumentsForOrder}
-            onEdit={(order) => {
-              setEditingOrderId(order.id)
-              setOrderForm({
-                title: order.title,
-                status: order.status,
-                sourceLanguageId: order.sourceLanguageId ? String(order.sourceLanguageId) : '',
-                targetLanguageId: order.targetLanguageId ? String(order.targetLanguageId) : '',
-                clientId: order.clientId ? String(order.clientId) : '',
-                translatorId: order.translatorId ? String(order.translatorId) : '',
-                documentIds: (order.documentIds ?? []).map(Number),
-              })
-            }}
+            onEdit={openOrderEditor}
             onDelete={(id) => window.confirm('Удалить эту запись?') && mutate(`/api/orders/${id}`, 'DELETE', null, 'Заказ удалён.')}
-            onDocumentToggle={(documentId) =>
-              setOrderForm((current) => ({
-                ...current,
-                documentIds: current.documentIds.includes(documentId)
-                  ? current.documentIds.filter((item) => item !== documentId)
-                  : [...current.documentIds, documentId],
-              }))
-            }
-            pendingAction={pendingAction}
             loading={loading}
           />
         ) : null}
 
         {activeSection === 'documents' ? (
           <DocumentsPanel
-            documentForm={documentForm}
-            setDocumentForm={setDocumentForm}
-            editingDocumentId={editingDocumentId}
-            onSubmit={(event) => {
-              event.preventDefault()
-              mutate(editingDocumentId ? `/api/documents/${editingDocumentId}` : '/api/documents', editingDocumentId ? 'PUT' : 'POST', {
-                type: documentForm.type,
-                pages: Number(documentForm.pages),
-                orderId: toOptionalNumber(documentForm.orderId),
-              }, editingDocumentId ? 'Данные документа обновлены.' : 'Документ добавлен.', () => {
-                setEditingDocumentId(null)
-                setDocumentForm(emptyDocumentForm())
-              })
-            }}
-            onReset={() => {
-              setEditingDocumentId(null)
-              setDocumentForm(emptyDocumentForm())
-            }}
             documentQuery={documentQuery}
             setDocumentQuery={setDocumentQuery}
             documentFilterOrderId={documentFilterOrderId}
@@ -867,20 +892,182 @@ function App() {
             getOrderTitle={getOrderTitle}
             documentsPage={documentsPage}
             setDocumentFilters={setDocumentFilters}
-            onEdit={(document) => {
-              setEditingDocumentId(document.id)
-              setDocumentForm({
-                type: document.type,
-                pages: String(document.pages),
-                orderId: document.orderId ? String(document.orderId) : '',
-              })
-            }}
+            onEdit={openDocumentEditor}
             onDelete={(id) => window.confirm('Удалить эту запись?') && mutate(`/api/documents/${id}`, 'DELETE', null, 'Документ удалён.')}
-            pendingAction={pendingAction}
             loading={loadingDocuments}
           />
         ) : null}
       </main>
+
+      {dialogSection ? (
+        <FormDialog title={dialogTitle} onClose={closeDialog}>
+          {dialogSection === 'clients' ? (
+            <ClientForm
+              clientForm={clientForm}
+              setClientForm={setClientForm}
+              editingClientId={editingClientId}
+              onSubmit={(event) => {
+                event.preventDefault()
+                mutate(
+                  editingClientId ? `/api/clients/${editingClientId}` : '/api/clients',
+                  editingClientId ? 'PUT' : 'POST',
+                  clientForm,
+                  editingClientId ? 'Данные клиента обновлены.' : 'Клиент добавлен.',
+                  closeDialog,
+                )
+              }}
+              onCancel={closeDialog}
+              pendingAction={pendingAction}
+            />
+          ) : null}
+
+          {dialogSection === 'translators' ? (
+            <TranslatorForm
+              translatorForm={translatorForm}
+              setTranslatorForm={setTranslatorForm}
+              editingTranslatorId={editingTranslatorId}
+              onSubmit={(event) => {
+                event.preventDefault()
+                mutate(
+                  editingTranslatorId
+                    ? `/api/translators/${editingTranslatorId}`
+                    : '/api/translators',
+                  editingTranslatorId ? 'PUT' : 'POST',
+                  {
+                    firstName: translatorForm.firstName,
+                    lastName: translatorForm.lastName,
+                    ratePerPage: Number(translatorForm.ratePerPage),
+                    languages: translatorForm.languages.map((item) => ({
+                      languageId: Number(item.languageId),
+                      proficiencyLevel: item.proficiencyLevel,
+                    })),
+                  },
+                  editingTranslatorId
+                    ? 'Данные переводчика обновлены.'
+                    : 'Переводчик добавлен.',
+                  closeDialog,
+                )
+              }}
+              onCancel={closeDialog}
+              onLanguageChange={(index, field, value) =>
+                setTranslatorForm((current) => ({
+                  ...current,
+                  languages: current.languages.map((item, currentIndex) =>
+                    currentIndex === index ? { ...item, [field]: value } : item,
+                  ),
+                }))
+              }
+              onLanguageAdd={() =>
+                setTranslatorForm((current) => ({
+                  ...current,
+                  languages: [
+                    ...current.languages,
+                    { languageId: '', proficiencyLevel: 'INTERMEDIATE' },
+                  ],
+                }))
+              }
+              onLanguageRemove={(index) =>
+                setTranslatorForm((current) => ({
+                  ...current,
+                  languages:
+                    current.languages.length === 1
+                      ? current.languages
+                      : current.languages.filter(
+                          (_, currentIndex) => currentIndex !== index,
+                        ),
+                }))
+              }
+              languages={languages}
+              pendingAction={pendingAction}
+            />
+          ) : null}
+
+          {dialogSection === 'languages' ? (
+            <LanguageForm
+              languageForm={languageForm}
+              setLanguageForm={setLanguageForm}
+              editingLanguageId={editingLanguageId}
+              onSubmit={(event) => {
+                event.preventDefault()
+                mutate(
+                  editingLanguageId ? `/api/languages/${editingLanguageId}` : '/api/languages',
+                  editingLanguageId ? 'PUT' : 'POST',
+                  languageForm,
+                  editingLanguageId ? 'Данные языка обновлены.' : 'Язык добавлен.',
+                  closeDialog,
+                )
+              }}
+              onCancel={closeDialog}
+              pendingAction={pendingAction}
+            />
+          ) : null}
+
+          {dialogSection === 'orders' ? (
+            <OrderForm
+              orderForm={orderForm}
+              setOrderForm={setOrderForm}
+              editingOrderId={editingOrderId}
+              onSubmit={(event) => {
+                event.preventDefault()
+                mutate(
+                  editingOrderId ? `/api/orders/${editingOrderId}` : '/api/orders',
+                  editingOrderId ? 'PUT' : 'POST',
+                  {
+                    title: orderForm.title,
+                    status: orderForm.status,
+                    sourceLanguageId: toOptionalNumber(orderForm.sourceLanguageId),
+                    targetLanguageId: toOptionalNumber(orderForm.targetLanguageId),
+                    clientId: toOptionalNumber(orderForm.clientId),
+                    translatorId: toOptionalNumber(orderForm.translatorId),
+                    documentIds: orderForm.documentIds.map(Number),
+                  },
+                  editingOrderId ? 'Данные заказа обновлены.' : 'Заказ добавлен.',
+                  closeDialog,
+                )
+              }}
+              onCancel={closeDialog}
+              documents={documents}
+              clients={clients}
+              translators={translators}
+              languages={languages}
+              onDocumentToggle={(documentId) =>
+                setOrderForm((current) => ({
+                  ...current,
+                  documentIds: current.documentIds.includes(documentId)
+                    ? current.documentIds.filter((item) => item !== documentId)
+                    : [...current.documentIds, documentId],
+                }))
+              }
+              pendingAction={pendingAction}
+            />
+          ) : null}
+
+          {dialogSection === 'documents' ? (
+            <DocumentForm
+              documentForm={documentForm}
+              setDocumentForm={setDocumentForm}
+              editingDocumentId={editingDocumentId}
+              onSubmit={(event) => {
+                event.preventDefault()
+                mutate(
+                  editingDocumentId ? `/api/documents/${editingDocumentId}` : '/api/documents',
+                  editingDocumentId ? 'PUT' : 'POST',
+                  {
+                    type: documentForm.type,
+                    pages: Number(documentForm.pages),
+                    orderId: toOptionalNumber(documentForm.orderId),
+                  },
+                  editingDocumentId ? 'Данные документа обновлены.' : 'Документ добавлен.',
+                  closeDialog,
+                )
+              }}
+              onCancel={closeDialog}
+              orders={orderOptions}
+              pendingAction={pendingAction}
+            />
+          ) : null}
+        </FormDialog>
+      ) : null}
     </div>
   )
 }
