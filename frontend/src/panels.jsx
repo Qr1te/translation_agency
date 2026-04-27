@@ -377,51 +377,56 @@ export function TranslatorsPanel(props) {
             Выберите языки, с которыми работает переводчик, и укажите уровень
             владения каждым языком.
           </div>
-          {translatorForm.languages.map((item, index) => (
-            <div key={`${item.languageId}-${index}`} className="field-grid">
-              <label className="field">
-                <span>Язык</span>
-                <select
-                  value={item.languageId}
-                  onChange={(event) => onLanguageChange(index, 'languageId', event.target.value)}
-                >
-                  <option value="">Выберите язык</option>
-                  {languages.map((language) => (
-                    <option key={language.id} value={language.id}>
-                      {language.code.toUpperCase()} - {language.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="field">
-                <span>Уровень владения</span>
-                <select
-                  value={item.proficiencyLevel}
-                  onChange={(event) =>
-                    onLanguageChange(index, 'proficiencyLevel', event.target.value)
-                  }
-                >
-                  {proficiencyOptions.map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <div className="form-actions">
-                <button className="button ghost" type="button" onClick={onLanguageAdd}>
-                  Добавить язык
-                </button>
+          <div className="translator-languages">
+            {translatorForm.languages.map((item, index) => (
+              <div key={`${item.languageId}-${index}`} className="translator-language-row">
+                <div className="field-grid translator-language-fields">
+                  <label className="field">
+                    <span>Язык</span>
+                    <select
+                      value={item.languageId}
+                      onChange={(event) => onLanguageChange(index, 'languageId', event.target.value)}
+                    >
+                      <option value="">Выберите язык</option>
+                      {languages.map((language) => (
+                        <option key={language.id} value={language.id}>
+                          {language.code.toUpperCase()} - {language.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="field">
+                    <span>Уровень владения</span>
+                    <select
+                      value={item.proficiencyLevel}
+                      onChange={(event) =>
+                        onLanguageChange(index, 'proficiencyLevel', event.target.value)
+                      }
+                    >
+                      {proficiencyOptions.map(([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
                 <button
-                  className="button secondary"
+                  className="button secondary compact-action"
                   type="button"
                   onClick={() => onLanguageRemove(index)}
+                  disabled={translatorForm.languages.length === 1}
                 >
-                  Убрать строку
+                  Убрать
                 </button>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+          <div className="form-actions form-actions-compact">
+            <button className="button ghost" type="button" onClick={onLanguageAdd}>
+              Добавить язык
+            </button>
+          </div>
           <div className="form-actions">
             <button className="button primary" type="submit" disabled={!!pendingAction}>
               {editingTranslatorId ? 'Сохранить изменения' : 'Добавить переводчика'}

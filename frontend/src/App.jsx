@@ -568,30 +568,7 @@ function App() {
   return (
     <div className="app-shell">
       <header className="hero-panel">
-        <div className="hero-copy">
-          <div className="eyebrow">Бюро переводов полного цикла</div>
-          <h1>Профессиональные переводы документов, договоров и деловой переписки</h1>
-          <p>
-            Рабочая панель бюро переводов для ежедневной операционной работы:
-            здесь удобно принимать заявки, вести клиентов, подбирать
-            переводчиков по языковой паре и контролировать каждый документ от
-            первого обращения до сдачи готового перевода.
-          </p>
-          <div className="hero-actions">
-            <button className="button primary" type="button" onClick={() => queueRefresh('Список обновлён.')} disabled={loading}>
-              Обновить данные
-            </button>
-            <button className="button secondary" type="button" onClick={() => startTransition(() => setActiveSection('orders'))}>
-              Открыть заказы
-            </button>
-          </div>
-          <div className="stats-grid">
-            <div className="stat-card"><strong>{clients.length}</strong><span>клиентов в базе</span></div>
-            <div className="stat-card"><strong>{translators.length}</strong><span>переводчиков в базе</span></div>
-            <div className="stat-card"><strong>{ordersPage.totalElements}</strong><span>заказов в системе</span></div>
-            <div className="stat-card"><strong>{documents.length}</strong><span>документов в системе</span></div>
-          </div>
-        </div>
+        <h1 className="page-title">Бюро переводов</h1>
       </header>
 
       {banner ? <div className={`notice ${banner.type}`}>{banner.text}</div> : null}
