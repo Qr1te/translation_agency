@@ -445,6 +445,21 @@
   margin-bottom: 18px;
 }
 
+.pagination-summary .card-actions {
+  display: none;
+}
+
+.pagination-footer {
+  justify-content: flex-end;
+  margin-top: 18px;
+  margin-bottom: 0;
+}
+
+.pagination-actions {
+  width: 100%;
+  justify-content: flex-end;
+}
+
 .spinner-line {
   display: inline-flex;
   align-items: center;
@@ -592,5 +607,10 @@
 
   .modal-body {
     padding: 14px 16px 16px;
+  }
+
+  .pagination-footer,
+  .pagination-actions {
+    justify-content: center;
   }
 }

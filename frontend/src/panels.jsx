@@ -24,6 +24,31 @@ function PanelCard({ children }) {
   return <div className="list-card section-list-card">{children}</div>
 }
 
+function PaginationActions({ previousDisabled, nextDisabled, onPrevious, onNext }) {
+  return (
+    <div className="pagination pagination-footer">
+      <div className="card-actions pagination-actions">
+        <button
+          className="icon-button"
+          type="button"
+          disabled={previousDisabled}
+          onClick={onPrevious}
+        >
+          РќР°Р·Р°Рґ
+        </button>
+        <button
+          className="icon-button"
+          type="button"
+          disabled={nextDisabled}
+          onClick={onNext}
+        >
+          Р”Р°Р»РµРµ
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function ClientForm(props) {
   const {
     clientForm,
@@ -104,7 +129,7 @@ export function ClientsPanel(props) {
         </label>
       </div>
 
-      <div className="pagination">
+      <div className="pagination pagination-summary">
         <div className="mini-note">
           Страница {clientsPage.number + 1} из {Math.max(clientsPage.totalPages, 1)} - всего
           клиентов: {clientsPage.totalElements}
@@ -189,6 +214,27 @@ export function ClientsPanel(props) {
           })
         )}
       </div>
+
+      <PaginationActions
+        previousDisabled={clientsPage.number === 0 || loading}
+        nextDisabled={
+          clientsPage.totalPages === 0 ||
+          clientsPage.number >= clientsPage.totalPages - 1 ||
+          loading
+        }
+        onPrevious={() =>
+          setClientFilters((current) => ({
+            ...current,
+            page: Math.max(current.page - 1, 0),
+          }))
+        }
+        onNext={() =>
+          setClientFilters((current) => ({
+            ...current,
+            page: current.page + 1,
+          }))
+        }
+      />
     </PanelCard>
   )
 }
@@ -261,7 +307,7 @@ export function LanguagesPanel(props) {
         </label>
       </div>
 
-      <div className="pagination">
+      <div className="pagination pagination-summary">
         <div className="mini-note">
           Страница {languagePage.number + 1} из {Math.max(languagePage.totalPages, 1)} - всего
           языков: {languagePage.totalElements}
@@ -326,6 +372,27 @@ export function LanguagesPanel(props) {
           ))
         )}
       </div>
+
+      <PaginationActions
+        previousDisabled={languagePage.number === 0 || loading}
+        nextDisabled={
+          languagePage.totalPages === 0 ||
+          languagePage.number >= languagePage.totalPages - 1 ||
+          loading
+        }
+        onPrevious={() =>
+          setLanguageFilters((current) => ({
+            ...current,
+            page: Math.max(current.page - 1, 0),
+          }))
+        }
+        onNext={() =>
+          setLanguageFilters((current) => ({
+            ...current,
+            page: current.page + 1,
+          }))
+        }
+      />
     </PanelCard>
   )
 }
@@ -469,7 +536,7 @@ export function TranslatorsPanel(props) {
         </label>
       </div>
 
-      <div className="pagination">
+      <div className="pagination pagination-summary">
         <div className="mini-note">
           Страница {translatorsPage.number + 1} из {Math.max(translatorsPage.totalPages, 1)} -
           всего переводчиков: {translatorsPage.totalElements}
@@ -547,6 +614,27 @@ export function TranslatorsPanel(props) {
           ))
         )}
       </div>
+
+      <PaginationActions
+        previousDisabled={translatorsPage.number === 0 || loading}
+        nextDisabled={
+          translatorsPage.totalPages === 0 ||
+          translatorsPage.number >= translatorsPage.totalPages - 1 ||
+          loading
+        }
+        onPrevious={() =>
+          setTranslatorFilters((current) => ({
+            ...current,
+            page: Math.max(current.page - 1, 0),
+          }))
+        }
+        onNext={() =>
+          setTranslatorFilters((current) => ({
+            ...current,
+            page: current.page + 1,
+          }))
+        }
+      />
     </PanelCard>
   )
 }
@@ -808,7 +896,7 @@ export function OrdersPanel(props) {
         </div>
       </div>
 
-      <div className="pagination">
+      <div className="pagination pagination-summary">
         <div className="mini-note">
           Страница {ordersPage.number + 1} из {Math.max(ordersPage.totalPages, 1)} - всего
           записей: {ordersPage.totalElements}
@@ -894,6 +982,27 @@ export function OrdersPanel(props) {
           ))
         )}
       </div>
+
+      <PaginationActions
+        previousDisabled={ordersPage.number === 0 || loading}
+        nextDisabled={
+          ordersPage.totalPages === 0 ||
+          ordersPage.number >= ordersPage.totalPages - 1 ||
+          loading
+        }
+        onPrevious={() =>
+          setOrderFilters((current) => ({
+            ...current,
+            page: Math.max(current.page - 1, 0),
+          }))
+        }
+        onNext={() =>
+          setOrderFilters((current) => ({
+            ...current,
+            page: current.page + 1,
+          }))
+        }
+      />
     </PanelCard>
   )
 }
@@ -1009,7 +1118,7 @@ export function DocumentsPanel(props) {
         </label>
       </div>
 
-      <div className="pagination">
+      <div className="pagination pagination-summary">
         <div className="mini-note">
           Страница {documentsPage.number + 1} из {Math.max(documentsPage.totalPages, 1)} - всего
           документов: {documentsPage.totalElements}
@@ -1079,6 +1188,27 @@ export function DocumentsPanel(props) {
           ))
         )}
       </div>
+
+      <PaginationActions
+        previousDisabled={documentsPage.number === 0 || loading}
+        nextDisabled={
+          documentsPage.totalPages === 0 ||
+          documentsPage.number >= documentsPage.totalPages - 1 ||
+          loading
+        }
+        onPrevious={() =>
+          setDocumentFilters((current) => ({
+            ...current,
+            page: Math.max(current.page - 1, 0),
+          }))
+        }
+        onNext={() =>
+          setDocumentFilters((current) => ({
+            ...current,
+            page: current.page + 1,
+          }))
+        }
+      />
     </PanelCard>
   )
 }

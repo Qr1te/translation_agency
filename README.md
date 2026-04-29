@@ -30,15 +30,18 @@ Spring Boot REST API для агентства переводов.
 ## Конфигурация БД
 Файл: `src/main/resources/application.properties`
 
-По умолчанию:
-- URL: `jdbc:postgresql://localhost:5432/translation_agency`
-- User: `postgres`
-- Password: из переменной окружения `DB_PASSWORD`
+Конфигурация БД задаётся только через переменные окружения или file-based secrets:
+- `SPRING_DATASOURCE_URL` или `DATABASE_URL`
+- `SPRING_DATASOURCE_USERNAME`
+- `SPRING_DATASOURCE_PASSWORD` или `DB_PASSWORD`
+- `SPRING_DATASOURCE_PASSWORD_FILE` или `DB_PASSWORD_FILE`
 
-Перед запуском установи пароль:
+Пример локального запуска без хранения пароля в репозитории:
 
 ```powershell
-$env:DB_PASSWORD="your_postgres_password"
+$env:SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/translation_agency"
+$env:SPRING_DATASOURCE_USERNAME="postgres"
+$env:SPRING_DATASOURCE_PASSWORD_FILE=(Resolve-Path .\secrets\postgres_password.txt)
 ```
 
 ## Запуск
@@ -68,11 +71,17 @@ java -jar target/translation_agency-0.0.1-SNAPSHOT.jar
 
 ## Docker
 
-Подготовь `.env` на основе `.env.example` и при необходимости измени значения:
+Подготовь `.env` и локальный secret-файл:
 
 ```powershell
 Copy-Item .env.example .env
+New-Item -ItemType Directory -Force secrets | Out-Null
+Copy-Item secrets/postgres_password.txt.example secrets/postgres_password.txt
 ```
+
+Запиши в `secrets/postgres_password.txt` сильный пароль.
+`docker compose` читает его как Docker secret, поэтому пароль не хранится в `docker-compose.yml`
+и не попадает в tracked env-файлы.
 
 Сборка образа:
 
@@ -115,19 +124,16 @@ docker compose down
 
 ## CI/CD
 
-Добавлен workflow `.github/workflows/ci-cd.yml` со стадиями:
-- backend tests
-- backend build
-- frontend lint/build
-- docker image build
-- docker compose smoke healthcheck
-- deploy hook + remote healthcheck
+В текущем репозитории нет tracked CI/CD workflow-файла.
+Если будешь добавлять GitHub Actions, GitLab CI или Jenkins pipeline, передавай чувствительные значения
+только через secrets/credentials хранилище платформы, а не через YAML или docker-файлы.
 
-Для автоматического деплоя на Render в GitHub Secrets нужно добавить:
+Для автоматического деплоя на Render в GitHub Secrets обычно нужны:
 - `RENDER_DEPLOY_HOOK_URL`
 - `RENDER_HEALTHCHECK_URL`
+- credentials базы данных или provider-managed connection string
 
-Если секреты не заданы, workflow выполнит только CI-проверки без деплоя.
+Не коммить реальные значения этих переменных в репозиторий.
 
 ## Render PaaS
 
@@ -140,6 +146,7 @@ docker compose down
 - healthcheck `GET /actuator/health`
 - free Postgres как источник `DATABASE_URL`
 - поддержка `DATABASE_URL` в приложении
+- отсутствие inline credentials в `render.yaml`
 
 Как развернуть:
 1. Зайди в Render и выбери `New +` -> `Blueprint`.

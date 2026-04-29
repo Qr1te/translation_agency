@@ -51,3 +51,5 @@ frontend/.vite/
 .env.*
 frontend/.env
 frontend/.env.*
+secrets/*
+!secrets/*.example
