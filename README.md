@@ -80,7 +80,8 @@ Copy-Item secrets/postgres_password.txt.example secrets/postgres_password.txt
 ```
 
 Запиши в `secrets/postgres_password.txt` сильный пароль.
-`docker compose` читает его как Docker secret, поэтому пароль не хранится в `docker-compose.yml`
+Важно: `secrets/postgres_password.txt` должен быть именно файлом, не папкой.
+`docker compose` монтирует его в контейнеры как read-only secret file, поэтому пароль не хранится в `docker-compose.yml`
 и не попадает в tracked env-файлы.
 
 Сборка образа:

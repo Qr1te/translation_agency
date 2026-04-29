@@ -146,7 +146,13 @@ public class DatabaseUrlEnvironmentPostProcessor
 
     private String readSecretFile(String environmentKey, String fileLocation) {
         try {
-            String value = Files.readString(Path.of(fileLocation.trim()), StandardCharsets.UTF_8).trim();
+            Path secretPath = Path.of(fileLocation.trim());
+            if (Files.isDirectory(secretPath)) {
+                throw new IllegalStateException(
+                        environmentKey + " points to a directory, but a secret file is required");
+            }
+
+            String value = Files.readString(secretPath, StandardCharsets.UTF_8).trim();
             if (!StringUtils.hasText(value)) {
                 throw new IllegalStateException(environmentKey + " points to an empty file");
             }

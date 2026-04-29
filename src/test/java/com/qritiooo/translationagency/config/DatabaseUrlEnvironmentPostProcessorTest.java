@@ -2,6 +2,7 @@ package com.qritiooo.translationagency.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -63,5 +64,17 @@ class DatabaseUrlEnvironmentPostProcessorTest {
 
         assertThrows(IllegalStateException.class,
                 () -> processor.postProcessEnvironment(environment, new SpringApplication(Object.class)));
+    }
+
+    @Test
+    void failsFastWhenSecretPathIsDirectory() throws IOException {
+        Path secretDirectory = Files.createDirectory(tempDir.resolve("db-password-dir"));
+        MockEnvironment environment = new MockEnvironment()
+                .withProperty("SPRING_DATASOURCE_PASSWORD_FILE", secretDirectory.toString());
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> processor.postProcessEnvironment(environment, new SpringApplication(Object.class)));
+
+        assertTrue(exception.getMessage().contains("directory"));
     }
 }

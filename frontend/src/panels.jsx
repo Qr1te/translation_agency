@@ -34,7 +34,7 @@ function PaginationActions({ previousDisabled, nextDisabled, onPrevious, onNext 
           disabled={previousDisabled}
           onClick={onPrevious}
         >
-          РќР°Р·Р°Рґ
+          Назад
         </button>
         <button
           className="icon-button"
@@ -42,7 +42,7 @@ function PaginationActions({ previousDisabled, nextDisabled, onPrevious, onNext 
           disabled={nextDisabled}
           onClick={onNext}
         >
-          Р”Р°Р»РµРµ
+          Далее
         </button>
       </div>
     </div>
