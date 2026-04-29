@@ -124,16 +124,28 @@ docker compose down
 
 ## CI/CD
 
-В текущем репозитории нет tracked CI/CD workflow-файла.
-Если будешь добавлять GitHub Actions, GitLab CI или Jenkins pipeline, передавай чувствительные значения
-только через secrets/credentials хранилище платформы, а не через YAML или docker-файлы.
+В репозитории есть tracked workflow `.github/workflows/ci-cd.yml`.
+Он не читает реальный `.env` из Git и собирает временный `.env` в CI из GitHub Actions secrets/variables.
 
-Для автоматического деплоя на Render в GitHub Secrets обычно нужны:
-- `RENDER_DEPLOY_HOOK_URL`
-- `RENDER_HEALTHCHECK_URL`
-- credentials базы данных или provider-managed connection string
+Что добавить в `GitHub -> Settings -> Secrets and variables -> Actions`:
+- Secret `CI_POSTGRES_PASSWORD`
+  Используется в `docker-smoke` для локального Postgres внутри CI. Не обязателен: если не задан, workflow возьмёт fallback `ci-postgres-password`.
+- Secret `RENDER_DEPLOY_HOOK_URL`
+  Обязателен для deploy job. Это deploy hook Render web service.
+- Variable `RENDER_HEALTHCHECK_URL`
+  Не секрет. Рекомендуемое значение: `https://<service-name>.onrender.com/actuator/health`.
 
-Не коммить реальные значения этих переменных в репозиторий.
+Опциональные GitHub Variables для `docker-smoke`, если хочешь переопределять дефолты без правки YAML:
+- `CI_SERVER_PORT`
+- `CI_FRONTEND_PORT`
+- `CI_POSTGRES_PORT`
+- `CI_POSTGRES_DB`
+- `CI_POSTGRES_USER`
+- `CI_SPRING_JPA_HIBERNATE_DDL_AUTO`
+- `CI_APP_CORS_ALLOWED_ORIGINS`
+
+Если эти variables не заданы, workflow использует безопасные дефолты прямо в CI.
+Реальные пароли, токены и ключи в репозиторий не коммить.
 
 ## Render PaaS
 
@@ -154,7 +166,7 @@ docker compose down
 3. Подтверди создание сервисов из `render.yaml`.
 4. После создания backend будет доступен по адресу вида `https://<service-name>.onrender.com`.
 5. Создай deploy hook у web service и добавь его в GitHub secret `RENDER_DEPLOY_HOOK_URL`.
-6. Добавь `https://<service-name>.onrender.com/actuator/health` в GitHub secret `RENDER_HEALTHCHECK_URL`.
+6. Добавь `https://<service-name>.onrender.com/actuator/health` в GitHub variable `RENDER_HEALTHCHECK_URL`.
 
 Важно: free Render Postgres по официальной документации истекает через 30 дней, поэтому такой вариант подходит для демо, курсовой или защиты, но не для постоянного production.
 
